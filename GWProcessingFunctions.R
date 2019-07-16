@@ -11,7 +11,7 @@
 #' ReadXMLData() 
 
 ReadXMLData <- function(XMLFile) {
-  
+
   #Test for and load any libraries that are needed
   if (!require(xml2)) install.packages('xml2'); library(xml2)
   if (!require(zoo)) install.packages('zoo'); library(zoo)
@@ -19,11 +19,11 @@ ReadXMLData <- function(XMLFile) {
   #Load the data
    data <- read_xml(XMLFile,encoding = "ISO-8859-1")
    
-   #Get the timeseries of temperature, depth, date and time
-   Date <- xml_text(xml_find_all(data, ".//Date"))
-   Time <- xml_text(xml_find_all(data, ".//Time"))
-   Depth <- xml_double(xml_find_all(data, ".//ch1"))
-   Temperature <- xml_double(xml_find_all(data, ".//ch2"))
+   #Get the timeseries of temperature, depth, date and time. These are in the "Data" child node.
+   Date <- xml_text(xml_find_all(xml_child(data,search="Data"), ".//Date"))
+   Time <- xml_text(xml_find_all(xml_child(data,search="Data"), ".//Time"))
+   Depth <- xml_double(xml_find_all(xml_child(data,search="Data"), ".//ch1"))
+   Temperature <- xml_double(xml_find_all(xml_child(data,search="Data"), ".//ch2"))
    
    #Turn the dates and time into a POSIXct object
    DateTime <- as.POSIXct(paste(Date,Time),format = "%Y/%m/%d %H:%M:%S", tz = "Etc/GMT-12")
@@ -50,7 +50,7 @@ BarometricCorrection <- function(GWSeries, AirPressureSeries) {
   
   #Test for and load any libraries that are needed
   if (!require(zoo)) install.packages('zoo'); library(zoo)
-  browser()
+
   #Check that the groundwater time series is wholly within the range of the barometric pressure series
   GWRange <- range(index(GWSeries))
   BaroRange <- range(index(AirPressureSeries))
