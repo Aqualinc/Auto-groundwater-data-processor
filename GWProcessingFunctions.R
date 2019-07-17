@@ -22,8 +22,19 @@ ReadXMLData <- function(XMLFile) {
   
   #Load the data
    data <- read_xml(XMLFile,encoding = "ISO-8859-1")
+
+   #Get the battery level
+   BatteryLevel <- xml_double(xml_child(data,search="Instrument_info/Battery_level"))
+   #Get the Location description
+   LocationDescription <- xml_text(xml_child(data,search="Instrument_info_data_header/Location"))
+   #Get the Project ID
+   ProjectID <- xml_text(xml_child(data,search="Instrument_info_data_header/Project_ID"))
+   #Extract the APP number from the Project ID. This is assumed to be the first 1 to 3 digits after the case insentive letters "APP"
+   APPNumber <- as.numeric(sub(".*APP\\s*([1-9][0-9]{0,2}).*","\\1", ProjectID, ignore.case = TRUE))
+   #Extract the Zone number from the Project ID. This is assumed to be the first single digit number after the case insensitive word "zone"
+   ZoneNumber <- as.numeric(sub(".*Zone\\s*([1-9]).*","\\1", ProjectID, ignore.case = TRUE))
    
-   #Get the timeseries of the first two channels, date and time. These are in the "Data" child node.
+   #Get the time series of the first two channels, date and time. These are in the "Data" child node.
    Date <- xml_text(xml_find_all(xml_child(data,search="Data"), ".//Date"))
    Time <- xml_text(xml_find_all(xml_child(data,search="Data"), ".//Time"))
    ch1 <- xml_double(xml_find_all(xml_child(data,search="Data"), ".//ch1"))
@@ -53,7 +64,8 @@ ReadXMLData <- function(XMLFile) {
   
    #Create a zoo timeseries
    OutputData <- zoo(data.frame(Depth=Depth,Temperature=Temperature),order.by = DateTime)
-   return(OutputData)
+   OutputList <- list(Data = OutputData, Battery = BatteryLevel, Location = LocationDescription, APP = APPNumber, Zone = ZoneNumber)
+   return(OutputList)
 }
 
 
@@ -95,12 +107,20 @@ BarometricCorrection <- function(GWSeries, AirPressureSeries) {
 
 
 #Load some sample data
-DataDirectory <- "G:\\ARL Projects\\WL Projects\\WL18036_EQC Earthquake Commission\\Data\\HighResolutionData\\FromT_T_January2019\\DH1 - DH4\\DH1-DH4 Raw\\Data Harvest 1\\Zone 1"
-BaroFile <- file.path(DataDirectory,"221BARO_10_03_2017.xle")
-GroundwaterFile <- file.path(DataDirectory,"221_10_03_2017.xle")
+DataDirectory <- "G:\\ARL Projects\\WL Projects\\WL18036_EQC Earthquake Commission\\Data\\HighResolutionData\\FromT_T_January2019\\DH1 - DH4\\DH1-DH4 Raw"
+BaroFile <- file.path(DataDirectory,"Data Harvest 1\\Zone 1","221BARO_10_03_2017.xle")
+GroundwaterFile <- file.path(DataDirectory,"Data Harvest 1\\Zone 1","221_10_03_2017.xle")
 #221BARO_10_03_2017.xle
 #44_23_07_2017.xle
 #221_10_03_2017.xle
 
 Barometric <- ReadXMLData(BaroFile)
 Groundwater <- ReadXMLData(GroundwaterFile)
+
+
+#Get a list of the files to use
+FilesToProcess <- list.files(path = DataDirectory, pattern = 'xle$', recursive = TRUE, full.names = TRUE)
+
+#Get all the airpressure logger files to process
+BaroFilesToProcess <- list.files(path = DataDirectory, pattern = '(?i)^.*BARO.*xle$', recursive = TRUE, full.names = TRUE)
+
