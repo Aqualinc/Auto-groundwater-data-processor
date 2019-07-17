@@ -124,3 +124,22 @@ FilesToProcess <- list.files(path = DataDirectory, pattern = 'xle$', recursive =
 #Get all the airpressure logger files to process
 BaroFilesToProcess <- list.files(path = DataDirectory, pattern = '(?i)^.*BARO.*xle$', recursive = TRUE, full.names = TRUE)
 
+BaroData <- lapply(BaroFilesToProcess, ReadXMLData)
+
+Zones <- sapply(BaroData, '[[','Zone')
+
+#Work through each zone and build up a master barometric file
+ZoneBaroData <- lapply(unique(Zones), function(Zone) {
+  #browser()
+  #Extract all the data files associated with the zone of interest
+  ListIndices <- which(Zones == Zone)
+  BarosOfInterest <- BaroData[ListIndices]
+  DepthsOfInterest <- lapply(BarosOfInterest, function(x) x[['Data']]$'Depth')
+  
+  #Merge the data, then find the row averages. This covers the possibility of overlapping times
+  MergedData <- do.call(merge, DepthsOfInterest)
+  MergedAverage <- zoo(rowMeans(MergedData,na.rm=TRUE), index(MergedData))
+  return(MergedAverage)
+})
+
+names(ZoneBaroData) <- paste0("Zone",unique(Zones))
