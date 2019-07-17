@@ -2,7 +2,8 @@
 
 #' Import the Solist  ".xle" file (which is in xml format) and turn into a zoo object
 #' 
-#'   This function reads in a SOLIST level logger xml file and converts it into a zoo timeseries of depth and temperature
+#'   This function reads in a SOLIST level logger xml file from the Christchurch shallow bore network, and converts it into a zoo timeseries of depth and temperature.
+#'   If the LEVEL data are in psi or kPa then it is converted to metres head.
 #' @param XMLData a timeseries object in xml format
 #' @value A timeseries object 
 #' @keywords xml
@@ -16,14 +17,36 @@ ReadXMLData <- function(XMLFile) {
   if (!require(xml2)) install.packages('xml2'); library(xml2)
   if (!require(zoo)) install.packages('zoo'); library(zoo)
   
+  #Define the multipliers to convert from kPa or psi air pressure to metres of head
+  ConversionFactors <- c(kPa=0.10199773339984, psi = 0.70324961490205) #from https://www.convertunits.com
+  
   #Load the data
    data <- read_xml(XMLFile,encoding = "ISO-8859-1")
    
-   #Get the timeseries of temperature, depth, date and time. These are in the "Data" child node.
+   #Get the timeseries of the first two channels, date and time. These are in the "Data" child node.
    Date <- xml_text(xml_find_all(xml_child(data,search="Data"), ".//Date"))
    Time <- xml_text(xml_find_all(xml_child(data,search="Data"), ".//Time"))
-   Depth <- xml_double(xml_find_all(xml_child(data,search="Data"), ".//ch1"))
-   Temperature <- xml_double(xml_find_all(xml_child(data,search="Data"), ".//ch2"))
+   ch1 <- xml_double(xml_find_all(xml_child(data,search="Data"), ".//ch1"))
+   ch2 <- xml_double(xml_find_all(xml_child(data,search="Data"), ".//ch2"))
+
+   #Get the name and units of the channels. They should be "LEVEL" and "TEMPERATURE.", but which is which is not necesarily constant.
+   ch1ID <- xml_text(xml_child(data,search="Ch1_data_header/Identification"))
+   ch1Units <- xml_text(xml_child(data,search="Ch1_data_header/Unit"))
+   
+   ch2ID <- xml_text(xml_child(data,search="Ch2_data_header/Identification"))
+   ch2Units <- xml_text(xml_child(data,search="Ch2_data_header/Unit"))
+   
+   #Find which channel is LEVEL and which is TEMPERATURE. Case insensitive match.
+   DepthChannel <- which(toupper(c(ch1ID,ch2ID)) == "LEVEL")
+   TemperatureChannel <- which(toupper(c(ch1ID,ch2ID)) == "TEMPERATURE")
+   
+   #Rename the channel data to their respective names
+   Temperature <- get(paste0("ch",TemperatureChannel))
+   Depth <- get(paste0("ch",DepthChannel))
+   
+   DepthUnits <- c(ch1Units,ch2Units)[DepthChannel]
+   #Check the units of the depth channel and convert to metres head if necesary
+   if( DepthUnits != "m") Depth <- Depth * ConversionFactors[DepthUnits]
    
    #Turn the dates and time into a POSIXct object
    DateTime <- as.POSIXct(paste(Date,Time),format = "%Y/%m/%d %H:%M:%S", tz = "Etc/GMT-12")
@@ -50,6 +73,7 @@ BarometricCorrection <- function(GWSeries, AirPressureSeries) {
   
   #Test for and load any libraries that are needed
   if (!require(zoo)) install.packages('zoo'); library(zoo)
+  
 
   #Check that the groundwater time series is wholly within the range of the barometric pressure series
   GWRange <- range(index(GWSeries))
@@ -60,8 +84,8 @@ BarometricCorrection <- function(GWSeries, AirPressureSeries) {
   GWAndBaro <- merge(GWSeries,AirPressureSeries)
   GWAndBaro$AirPressureSeries <- na.approx(GWAndBaro$AirPressureSeries, method = "linear", na.rm = FALSE)
   
-  #Compensate the groundwater depths by subtracting the atmospheric pressure
-  Compensated <- with(GWAndBaro, GWSeries - AirPressureSeries)
+  #Compensate the groundwater depths by subtracting the atmospheric pressure (converted from kPa to m)
+  Compensated <- with(GWAndBaro, GWSeries - AirPressureSeries * kPaTomCOnversionFactor)
   
   #Remove any NAs
   Compensated <- Compensated[complete.cases(Compensated)]
