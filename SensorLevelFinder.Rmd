@@ -17,6 +17,7 @@ source("\\\\aqualinc-sbs\\data\\ARL Projects\\WL Projects\\WL18036_EQC Earthquak
 
 #Set some directories and filenames
 DataDirectory <- "G:\\ARL Projects\\WL Projects\\WL18036_EQC Earthquake Commission\\Data\\HighResolutionData\\FromT_T_January2019\\DH1 - DH4\\DH1-DH4 Raw"
+OutputDataDirectory <- "G:\\ARL Projects\\WL Projects\\WL18036_EQC Earthquake Commission\\Data\\HighResolutionData"
 
 ```
 
@@ -79,6 +80,9 @@ SensorLevels <- lapply(GroupedFiles[1:2], function(OneGroup) {
   })
 })
 AllSensorLevels <- do.call(c,unname(SensorLevels))
+
+#write this information to a file for later use
+write.table(cbind(names(AllSensorLevels),round(AllSensorLevels,2)), file = file.path(OutputDataDirectory,"SensorLevels.csv"),quote=FALSE,sep=",",col.names = c("APPNo","DepthToSensor(m)"),row.names=FALSE)
 ```
 
 
