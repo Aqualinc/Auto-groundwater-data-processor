@@ -7,7 +7,7 @@ tools include:
 - data logger drift correction to manual dips
 - data quality review and reporting
 
-##Data logger drift correction to manual dips
+## Data logger drift correction to manual dips
 It is assumed that the data loggers drift over time. To correct for this drift, the logger measurements are regularly compared to manual measurements and adjusted if there is a difference.
 There are many ways of doing this.
 The approach taken here is described below.
