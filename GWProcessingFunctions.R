@@ -5,7 +5,7 @@
 #'   This function reads in a SOLIST level logger xml file from the Christchurch shallow bore network, and converts it into a zoo timeseries of depth and temperature.
 #'   If the LEVEL data are in psi or kPa then it is converted to metres head.
 #' @param XMLData a timeseries object in xml format
-#' @value A list which includes a POSIXct zoo object of Depth (m of head) and temperature (oC), a Battery Level value, Location description string, APP number, Zone number
+#' @value A list which includes a POSIXct zoo object of LEVEL (m of head) and temperature (oC), a Battery Level value, Location description string, APP number, Zone number
 #' @keywords xml
 #' @export
 #' @examples
@@ -48,22 +48,22 @@ ReadXMLData <- function(XMLFile) {
    ch2Units <- xml_text(xml_child(data,search="Ch2_data_header/Unit"))
    
    #Find which channel is LEVEL and which is TEMPERATURE. Case insensitive match.
-   DepthChannel <- which(toupper(c(ch1ID,ch2ID)) == "LEVEL")
-   TemperatureChannel <- which(toupper(c(ch1ID,ch2ID)) == "TEMPERATURE")
+   LEVELChannel <- which(toupper(c(ch1ID,ch2ID)) == "LEVEL")
+   TEMPERATUREChannel <- which(toupper(c(ch1ID,ch2ID)) == "TEMPERATURE")
    
    #Rename the channel data to their respective names
-   Temperature <- get(paste0("ch",TemperatureChannel))
-   Depth <- get(paste0("ch",DepthChannel))
+   TEMPERATURE <- get(paste0("ch",TEMPERATUREChannel))
+   LEVEL <- get(paste0("ch",LEVELChannel))
    
-   DepthUnits <- c(ch1Units,ch2Units)[DepthChannel]
-   #Check the units of the depth channel and convert to metres head if necesary
-   if( DepthUnits != "m") Depth <- Depth * ConversionFactors[DepthUnits]
+   LEVELUnits <- c(ch1Units,ch2Units)[LEVELChannel]
+   #Check the units of the LEVEL channel and convert to metres head if necesary
+   if( LEVELUnits != "m") LEVEL <- LEVEL * ConversionFactors[LEVELUnits]
    
    #Turn the dates and time into a POSIXct object
    DateTime <- as.POSIXct(paste(Date,Time),format = "%Y/%m/%d %H:%M:%S", tz = "Etc/GMT-12")
   
    #Create a zoo timeseries
-   OutputData <- zoo(data.frame(Depth=Depth,Temperature=Temperature),order.by = DateTime)
+   OutputData <- zoo(data.frame(LEVEL=LEVEL,TEMPERATURE=TEMPERATURE),order.by = DateTime)
    OutputList <- list(Data = OutputData, Battery = BatteryLevel, Location = LocationDescription, APP = APPNumber, Zone = ZoneNumber)
    return(OutputList)
 }
@@ -96,12 +96,12 @@ BarometricCorrection <- function(GWSeries, AirPressureSeries, SensorLevelBelowSu
   GWAndBaro <- merge(GWSeries,AirPressureSeries)
   GWAndBaro$AirPressureSeries <- na.approx(GWAndBaro$AirPressureSeries, method = "linear", na.rm = FALSE)
   
-  #Compensate the groundwater depths by subtracting the atmospheric pressure
+  #Compensate the groundwater LEVELs by subtracting the atmospheric pressure
   AirPressureCompensated <- with(GWAndBaro, GWSeries - AirPressureSeries)
   
-  DepthToWL <- SensorLevelBelowSurface - AirPressureCompensated
+  LEVELToWL <- SensorLevelBelowSurface - AirPressureCompensated
   
-  HeightAboveGround <- -DepthToWL
+  HeightAboveGround <- -LEVELToWL
   
   #Remove any NAs
   HeightAboveGround <- HeightAboveGround[complete.cases(HeightAboveGround)]
@@ -134,10 +134,10 @@ BaroDataMerging <- function(DataDirectory) {
     #Extract all the data files associated with the zone of interest
     ListIndices <- which(Zones == Zone)
     BarosOfInterest <- BaroData[ListIndices]
-    DepthsOfInterest <- lapply(BarosOfInterest, function(x) x[['Data']]$'Depth')
+    LEVELsOfInterest <- lapply(BarosOfInterest, function(x) x[['Data']]$'LEVEL')
     
     #Merge the data, then find the row averages if there are multiple series. This covers the possibility of overlapping times
-    MergedData <- do.call(merge, DepthsOfInterest)
+    MergedData <- do.call(merge, LEVELsOfInterest)
     if(!is.null(ncol(MergedData))) MergedData <- zoo(rowMeans(MergedData,na.rm=TRUE), index(MergedData))
     return(MergedData)
   })
@@ -146,28 +146,3 @@ BaroDataMerging <- function(DataDirectory) {
   return(ZoneBaroData)
 }
 
-# #Load some sample data
-# DataDirectory <- "G:\\ARL Projects\\WL Projects\\WL18036_EQC Earthquake Commission\\Data\\HighResolutionData\\FromT_T_January2019\\DH1 - DH4\\DH1-DH4 Raw"
-# BaroFile <- file.path(DataDirectory,"Data Harvest 1\\Zone 1","221BARO_10_03_2017.xle")
-# GroundwaterFile <- file.path(DataDirectory,"Data Harvest 1\\Zone 1","221_10_03_2017.xle")
-# APPMetadataFile <- "bob.csv"
-# 
-# #221BARO_10_03_2017.xle
-# #44_23_07_2017.xle
-# #221_10_03_2017.xle
-# 
-# Barometric <- ReadXMLData(BaroFile)
-# Groundwater <- ReadXMLData(GroundwaterFile)
-# 
-# Compensated <- BarometricCorrection(Groundwater[['Data']]$'Depth',Barometric[['Data']]$'Depth')
-# 
-# 
-# #Get a list of the files to use
-# FilesToProcess <- list.files(path = DataDirectory, pattern = 'xle$', recursive = TRUE, full.names = TRUE)
-# 
-
-
-
-
-# 
-# #Work through the APP sites one by one, reading in the data, compensating for barometric pressure and writing to a file
