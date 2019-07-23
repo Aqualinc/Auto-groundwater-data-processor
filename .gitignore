@@ -2,4 +2,5 @@
 .Rhistory
 .RData
 .Ruserdata
-SensorLevelFinder.nb.html
+*.nb.html
+/OutputData/*.csv
