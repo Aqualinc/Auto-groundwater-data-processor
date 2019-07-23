@@ -2,10 +2,20 @@
 Software tools to automagically process large numbers of groundwater level time series data
 
 tools include:
-- barometric pressure correction
-- offset correction for sensor level
-- data logger drift correction to manual dips
-- data quality review and reporting
+- barometric pressure correction (completed)
+- offset correction for sensor level (completed)
+- data logger drift correction to manual dips (yet to implement)
+- data quality review and reporting (yet to implement)
+
+## Barometric pressure correction
+The groundwater level sensors measure pressure. They are fit within each well at a fixed depth within the groundwater. The sensor's pressure measurement is a result of the change in depth of the groundwater, and the change in air pressure. The air pressure variations need to be subtracted to provide the pressure variations associated with just the groundwater variation.
+There are three sensors in the network that are not in water, so they measure air pressure only. The data from these sensors are used to correct the groundwater sensors.
+
+## Offset correction for sensor level
+The groundwater level format requested by Environment Canterbury is the number of metres above the ground surface. An artesian well will be a positive number, groundwater levels below the surface are to be a negative number.
+The sensors data, following correction for air-pressure variations, provide a measure of the depth of water above the sensor. Conversion from that measurement to a  negative distance from the surface requires subtracting the sensor depth from the sensor pressure:
+h<sub>&theta;</sub>(x) = &theta;<sub>o</sub> x + &theta;<sub>1</sub>x
+![USGS Techniques of Water-Resources Investigations 8-A3 Figure 41](https://pubs.usgs.gov/twri/twri8a3/images/fig41.gif)
 
 ## Data logger drift correction to manual dips
 It is assumed that the data loggers drift over time. To correct for this drift, the logger measurements are regularly compared to manual measurements and adjusted if there is a difference.
