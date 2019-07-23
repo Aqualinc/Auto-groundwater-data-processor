@@ -1,0 +1,248 @@
+APPNo,Zone,Address,SensorDepth
+1,1,"In berm outside 9 Quantock Place",3.114
+2,1,"In reserve next to 127 Bridge Street",4.172
+3,1,"In berm outside 11 Cuffs Road",3.092
+4,1,"In berm outside 410 Bower Avenue",4.298
+5,1,"In berm outside 43 Riley Crescent",4.292
+8,1,"In berm outside 57 Blue Gum Place",3.094
+9,1,"In berm outside 16 Sandy Avenue",3.038
+10,1,"In berm opposite 108a Retreat Road",4.286
+22,1,"In berm outside 12a Lamorna Road",4.288
+23,1,"In berm outside 70 Broadhaven Drive",4.281
+24,1,"In shoulder outside 3 Croft Lane",4.295
+25,1,"In shoulder outside 9 Queenspark Drive",4.398
+26,1,"In shoulder outside 22a Ingrid Street",4.251
+27,1,"In berm outside 41 Donnington Street",4.317
+30,1,"In berm outside 4 Huron Street",4.292
+35,1,"In shoulder outside 36 Briarmont Street",2.972
+36,1,"In shoulder outside 96 Bickerton Street",4.28
+41,1,"In shoulder outside 18 Branksome Place",4.334
+42,1,"In shoulder outside 25 Royal Park Drive",4.326
+43,1,"In shoulder outside 1 Puhara Avenue",4.279
+44,1,"In shoulder outside 77 Travis County Drive",4.223
+46,1,"In shoulder outside 7 Netley Place",4.29
+47,1,"In shoulder outside 12 Binstead Place",4.311
+48,1,"In berm outside 6 Winnipeg Place",4.362
+49,1,"In carpark outside 3 Heriott Place",4.294
+53,1,"In shoulder outside 61 Forest Drive",4.287
+54,1,"In berm outside 150 Beach Road",4.298
+55,1,"In footpath outside 39 Cumnor Terrace",4.3
+59,1,"In shoulder outside 4 Chardale Street",4.329
+60,1,"In shoulder outside 7 Carlsen Street",4.202
+64,1,"In shoulder outside 8 Coopers Rd",4.316
+66,1,"In shoulder outside 59 Rockinghorse Road",4.308
+70,1,"In shoulder outside 1a Vivian Street",2.873
+76,1,"In shoulder outside 7 Newport Street",4.211
+77,1,"In shoulder outside 4 Colac Street",4.306
+78,1,"In berm outside 46 Orrick Crescent",4.281
+79,1,"In shoulder outside 6 Forest Drive",4.319
+80,1,"In shoulder outside 32 Riley Crescent",4.306
+82,1,"In shoulder outside 20 St Lukes Street",4.301
+83,1,"In berm outside 34 Bottle Lake Drive",4.332
+86,1,"In berm outside 6 Claymore Street",4.294
+97,1,"In shoulder outside 144 Kerrs Road",4.296
+103,1,"In berm outside 74 Patten Street",4.288
+105,1,"In shoulder outside 37 Tenby Place",2.662
+107,1,"In shoulder outside 15 Bampton St",4.334
+115,1,"In footpath outside 30 Patten Street",5.818
+125,1,"In shoulder outside 169 Breezes Road",4.286
+127,1,"In shoulder outside 3 Snelling Place",4.205
+153,1,"Avondale Playground",4.308
+154,1,"Ti Rakau Reserve",4.287
+155,1,"Avondale Park",4.3
+157,1,"In berm opposite 22 Rowan Avenue",4.334
+158,1,"In berm outside 102 Rowses Road (Guernsey Street)",4.289
+159,1,"In berm outside 10 Winchfield Street",4.309
+161,1,"Clarevale Reserve",4.296
+165,1,"Bridge Reserve at end of Falcon Street",4.282
+167,1,"In berm opposite 1 Mermaid Place",4.33
+171,1,"In berm opposite 934a Avonside Drive",4.306
+172,1,"In berm outside 4 Florance Place",4.297
+174,1,"Moyna Playground (15 Moyna Avenue)",4.323
+175,1,"Burwood Park opposite 64a Cresswell Avenue",5.829
+177,1,"In berm outside 4 Thurso Place",4.312
+178,1,"In berm outside 20 Gresham Terrace",4.327
+179,1,"In berm outside 145 Baker Street",4.292
+180,1,"QEII Park (adj Dick Taylor Drive)",4.246
+181,1,"Sea Eagles Reserve (33 Sea Eagles Place)",4.312
+183,1,"In berm outside 24 Allstone Place",4.306
+187,1,"In berm outside 41 Blake Street",4.311
+192,1,"Cnr Owles and Collingwood (adj to 55 Collingwood)",4.327
+193,1,"In berm outside 15 Esk Place",4.34
+194,1,"In berm outside 39 Meon Street",4.319
+196,1,"Delmare Park (85 St Heliers Crescent)",4.303
+197,1,"Kotuku Reserve ",4.318
+200,1,"In berm outside 34 Landy Street",4.323
+202,1,"Clare Park (19A Greenhaven Drive)",4.224
+205,1,"In berm outside 124 Avondale Road",4.294
+206,1,"Curzon Reserve (17 Curzon Place)",4.309
+207,1,"Bexley Park (Adj to 568 Pages Road)",4.316
+208,1,"In berm outside 25 Malta Crescent",4.295
+209,1,"In berm outside 8 Plover Street",4.295
+217,1,"In berm outside 5 Sequoia Place",4.318
+219,1,"Reserve at cnr Cossar Street & Glenconnor Place",4.234
+220,1,"In berm outside 1 Inverell Place (Philomel Street)",4.304
+221,1,"Aranui Plaground (13 Merrington Crescent)",4.313
+232,1,"Woodham Park (157 Woodham Road)",4.297
+233,1,"In berm opposite 68 Dallington Terrace",4.284
+246,1,"Rawhiti Domain",4.321
+6,2,"In berm outside 16 Holmwood Road",4.316
+7,2,"In berm cnr Garden Rd & Wairarapa Tce",4.272
+11,2,"In berm outside 37 Strowan Road",4.289
+12,2,"Next to Avon River opposite Parkbridge Apartments",4.238
+13,2,"In berm outside 7 Harvey Terrace",4.292
+14,2,"Kilmore Street side of Cranmore square",4.293
+15,2,"Corner Kilmore Street and Barbados Street",4.33
+16,2,"In berm opposite 54b Rolleston Avenue",4.179
+17,2,"Burke St. Opposite Trade Tools, in garden.",4.234
+18,2,"Buchan Playground",4.3
+19,2,"Outside 8 Barnabas Lane",3.084
+20,2,"Opposite 123 Eastern Tce, in berm",4.181
+21,2,"In berm opposite 70 Quinns Rd",4.242
+28,2,"In shoulder outside 599 Madras Street",4.191
+29,2,"In shoulder outside 12A Spurway Pl",4.287
+31,2,"In berm outside 84 Mersey St",4.272
+32,2,"In berm outside 70 Purchas Street",4.284
+33,2,"In berm outside 36 Geraldine Street",4.24
+34,2,"In footpath outside 435 Barbados St",4.302
+37,2,"In shoulder outside 8 Poulton Ave",4.303
+38,2,"In berm outside 45 Heywood Terrace",4.328
+39,2,"In berm outside 51 Dudley Street",4.265
+40,2,"In berm outside 82 Riselaw St",4.244
+45,2,"In berm outside 64 Emmett St",4.196
+50,2,"In berm outside 106 Totara St",4.258
+51,2,"In footpath outside 40 Somme Street",4.303
+52,2,"In footpath outside 12 Coles Place",4.304
+56,2,"In shoulder outside 197 Weston Road",4.332
+57,2,"In berm outside 118 Knowles Street",4.278
+58,2,"In shoulder outside 52 Mersey St",4.272
+61,2,"In shoulder outside 1 Slater Street",0.116
+62,2,"In berm outside 100 Warden St",4.191
+63,2,"In shoulder outside 68 Grafton Street",4.263
+65,2,"In shoulder outside 59 Fendalton Rd",4.25
+67,2,"In shoulder outside 69 Stevens Street",4.188
+68,2,"In berm outside 27 Kotare St",4.311
+69,2,"In berm outside 40 Clissold Street",4.379
+74,2,"In berm outside 73 St martins Rd",4.324
+75,2,"In driveway of 46 Mayfield St",4.209
+81,2,"In berm outside Kowhai Tce",4.281
+84,2,"In footpath cnr Wroxton Tce & Clifford Ave",4.27
+85,2,"In footpath outside 15 St Andrews Square",4.312
+87,2,"Driveway in front of 89 Halswell Rd",4.232
+88,2,"In shoulder outside 16 Chancellor Street",4.263
+89,2,"In should outside 18 Watford Street",4.287
+90,2,"In berm outside 11b Leinster Road",4.584
+91,2,"11 Cecil Place, in road",4.184
+92,2,"In shoulder outside 37 Cornwall Street",4.274
+93,2,"In shoulder outside 27 Oxley St",4.271
+94,2,"In shoulder outside 80 Andover St",4.305
+95,2,"In shoulder outside 77 Winchester Street",4.319
+96,2,"In shoulder outside 31b Merivale Lane",4.309
+98,2,"10 Goldsmith Place, in footpath",4.283
+99,2,"In berm outside 36 Helmores Lane",4.272
+100,2,"In shoulder outside 34 Rydal St",4.282
+102,2,"In berm outside 14 Avalon St",4.253
+106,2,"In berm outside 129 Mays Road - Tovendale Place side",4.303
+108,2,"In shoulder outside 13 Woodford Tce",4.292
+109,2,"In shoulder outside 1a Earnlea Tce",4.285
+112,2,"In footpath outside 30 Wyn St",4.298
+113,2,"In shoulder outside 102 Barbour Street",4.29
+117,2,"In shoulder outside 14 Weston Road",4.296
+118,2,"In berm outside 1 Upland Rd",4.278
+119,2,"In shoulder outside 13 Manning Place",4.238
+120,2,"In shoulder outside Chester Street East",4.199
+121,2,"In berm corner of Hanmer Street & Avonside Drive",4.337
+123,2,"In shoulder opposite 361 Cambridge Terrace",4.292
+124,2,"11 Austin St, in driveway",4.166
+128,2,"In shoulder outside 13 Salisbury Street",4.332
+129,2,"In shoulder outside 325 Barbados Street",4.31
+130,2,"In shoulder outside 13 Nutfield Lane",5.806
+131,2,"In shoulder outside 29b Idris Road",4.265
+132,2,"In road outside 12 Girvan St",4.266
+133,2,"In shoulder outside 5 Northaw St",4.26
+134,2,"In berm outside 48 Waiwetu St",4.276
+135,2,"In shoulder outside 44 Andover Street",4.347
+136,2,"In shoulder outside 31 Chapter Street",4.285
+137,2,"In berm opposite 2 Bretts Rd",1.888
+138,2,"In shoulder outside 28 McFaddens Road - Ketton Place side",4.304
+139,2,"In shoulder outside 18 Emmett Street",4.198
+140,2,"In shoulder outside 89 Barrington St",4.256
+141,2,"In footpath outside 5 Yeovil Place",4.348
+142,2,"In shoulder outside 240 Springfield Road",4.252
+143,2,"In shoulder outside  61 Mayfield Ave",4.297
+144,2,"In shoulder outside 248 Westminster St",4.205
+145,2,"In shoulder outside 88 Sherborne St",2.984
+146,2,"In shoulder on Purchas St outside 46 Sherborne St ",4.282
+147,2,"In berm outside 25 Plynlimon Rd",4.786
+148,2,"In berm outside 12 Brookside Tce",4.286
+149,2,"In shoulder outside 67 Wai-Iti Tce",4.276
+150,2,"In shoulder outside 112 Winchester Street",4.284
+151,2,"Barrington Park",0.116
+152,2,"In shoulder outside 74 Glandovey Rd",4.299
+156,2,"Sabina Playground (45 Sabina St)",4.28
+162,2,"In berm outside 66 Vogel Street",4.343
+168,2,"Champion Reserve (134 Champion Street)",4.249
+169,2,"Adj 32 McDougall Avenue",4.314
+170,2,"In berm outside 3 Francis Ave",4.297
+176,2,"Westbrooke Park (18 Birdling Place)",4.324
+182,2,"Heathcote Riverbank True Right South",4.271
+184,2,"In berm outside 46 Hopkins Street",4.241
+185,2,"Richmond Park (43 Medway Street)",4.179
+186,2,"In berm outside 52 Woodville St",4.26
+189,2,"Packe Reserve (129 Packe Street)",4.272
+190,2,"Monroe Playground (112 Garlands Road)",4.251
+191,2,"Viceroy Reserve (14 Viceroy Place)",5.901
+195,2,"In berm outside 179a Peterborough Street",4.274
+198,2,"Grass area cnr of Medway Street & North Parade",4.275
+199,2,"In berm outside 19 Linwood Avenue",4.336
+201,2,"Adj 34 Barbour Street",4.201
+203,2,"Moa Reserve (20 Melrose Place)",4.252
+204,2,"In berm outside 25 Swanns Road",4.313
+210,2,"In berm on Gresford St outside 86 Geraldine Street",4.234
+215,2,"Lewisham Reserve (45 Lewisham Park)",4.282
+216,2,"Pitcairn Playground (31 Pitcairn Crescent)",4.293
+218,2,"Westminster Park (16 Fernbrook Place)",4.231
+222,2,"Adj 32 Hoon Hay Road (on Upland Road)",4.247
+223,2,"Simeon Park (178 Simeon Street)",4.315
+224,2,"Braddon Reserve (24 Braddon Street)",4.222
+225,2,"Bradford Park (190 Milton Street)",4.293
+226,2,"Thorrington Reserve (20 Thorrington Road)",4.252
+227,2,"Hansen Park cnr Hawford Rd & Butler St",5.823
+231,2,"In berm outside 13 Derrett Pl",4.267
+234,2,"In berm outside 21 Stapletons Road",4.301
+235,2,"St Albans Park (638 Barbadoes Street)",4.256
+236,2,"In berm outside 186 Petrie Street",4.265
+237,2,"In berm outside 44 Tomes Road",4.283
+238,2,"Abberley Park (23 Abberley Crescent)",4.313
+239,2,"In shoulder outside 20 Roxburgh Street",4.211
+240,2,"In berm outside 84 Wilsons Rd",4.259
+241,2,"In berm opposite 21 Wades Ave",4.289
+243,2,"Next to basketball court, Harrington Park",4.268
+244,2,"COBRA RESERVE",4.29
+245,2,"KAIWARA RESERVE",4.293
+247,2,"Car Park, St Teresa's School",4.218
+71,3,"In shoulder outside 36 Feldwick Drive",4.284
+72,3,"In shoulder outside 72a Wesley Street",4.303
+73,3,"In shoulder outside 16 Barnes Road",4.313
+101,3,"In shoulder outside 79a Gardiners Road",4.218
+104,3,"Inshoulder outside 26 Cass Street",4.285
+110,3,"In berm outside 32a Prestons Road",4.3
+111,3,"In shoulder outside 5 Aztec Place",4.311
+114,3,"In shoulder outside 22 Aintree Street",4.314
+116,3,"In shoulder outside 12a Manuel Place",4.298
+122,3,"In shoulder outside 16 Englefield Road",4.285
+126,3,"In shoulder outside 8 Royal Court",4.311
+160,3,"In berm outside 108 Harris Crescent",4.276
+163,3,"In berm outdside Woodhurst Drive",4.323
+164,3,"In berm outside 84 Dunbarton St",4.33
+166,3,"Seafield Park (11 Nautilus Place)",4.303
+173,3,"In berm outside 57 Grampian Street",4.311
+188,3,"In berm outside 360 Lower Styx Road",4.345
+211,3,"In berm, middle of Cam Place cul de sac",4.229
+212,3,"Stretton Reserve (10B Stretton Street)",4.194
+213,3,"Murchison Park (46 Lowry Avenue)",4.298
+214,3,"St James Park",5.791
+228,3,"In berm outside 43 Blackwell Crescent (Bracebridge Street)",4.294
+229,3,"In berm outside 130 Otaki Street",4.304
+230,3,"Northwood Park (42 Northwood Boulevard)",4.295
+242,3,"MARBLEWOOD RESERVE",4.21
