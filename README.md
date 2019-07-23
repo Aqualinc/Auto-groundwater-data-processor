@@ -12,9 +12,10 @@ The groundwater level sensors measure pressure. They are fit within each well at
 There are three sensors in the network that are not in water, so they measure air pressure only. The data from these sensors are used to correct the groundwater sensors.
 
 ## Offset correction for sensor level
-The groundwater level format requested by Environment Canterbury is the number of metres above the ground surface. An artesian well will be a positive number, groundwater levels below the surface are to be a negative number.
-The sensors data, following correction for air-pressure variations, provide a measure of the depth of water above the sensor. Conversion from that measurement to a  negative distance from the surface requires subtracting the sensor depth from the sensor pressure:
-h<sub>&theta;</sub>(x) = &theta;<sub>o</sub> x + &theta;<sub>1</sub>x
+The groundwater level format requested by Environment Canterbury is the number of metres above the measuring point. An artesian well will be a positive number, groundwater levels below the measuring points are to be a negative number.
+The sensor data, following correction for air-pressure variations, provide a measure of the depth of water above the sensor. Conversion from that measurement to a  negative distance from the surface requires subtracting the sensor depth from the sensor pressure:
+*Groundwater level above measuring point = Sensor Pressure - Sensor depth*
+
 ![USGS Techniques of Water-Resources Investigations 8-A3 Figure 41](https://pubs.usgs.gov/twri/twri8a3/images/fig41.gif)
 
 ## Data logger drift correction to manual dips
@@ -28,3 +29,7 @@ The approach taken here is described below.
 4. Logged values between manual observations are offset by linear interpolation of the bounding offsets, based on the time.
 5. Logged values after the last manual measurement are offset by linear extrapolation of the long term drift.
 6. The latest drift offset and the change in drift over time is provided as part of the quality reporting.
+
+## Data quality review and reporting
+Unforeseen issues will occur with the data collection and processing. Through incluson of automatic quality reviewing provides a mechanism to flag when manual review of the data may be required.
+
