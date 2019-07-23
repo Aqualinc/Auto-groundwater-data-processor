@@ -15,6 +15,7 @@ There are three sensors in the network that are not in water, so they measure ai
 The groundwater level format requested by Environment Canterbury is the number of metres above the measuring point. An artesian well will be a positive number, groundwater levels below the measuring points are to be a negative number. The arrangement of the sensor, the groundwater level and the measuring point is shown in the figure below.
 
 ![USGS Techniques of Water-Resources Investigations 8-A3 Figure 41](https://pubs.usgs.gov/twri/twri8a3/images/fig41.gif)
+
 *Sensor, water level and measuring point diagram. From Figure 14 of USGS Techniques of Water-Resources Investigations 8-A3*
 
 The height above the measuring point (as requested by Environment Canterbury) is the equivalent of a negative "depth to water below measurement point" in the above diagram. The sensor data, following correction for air-pressure variations, provide a measure of the depth of water above the sensor, shown as the "submergence depth" in the above diagram. Conversion from that measurement to a negative distance from the surface requires subtracting of the sensor "hanging depth" from the submergence pressure:
