@@ -1,6 +1,9 @@
 # Auto-groundwater-data-processor
 Software tools to automagically process large numbers of groundwater level time series data
 
+This page provides a general description of what everything does.
+![This link provides details on how to use it](https://github.com/Aqualinc/Auto-groundwater-data-processor/wiki/Auto-groundwater-data-processor-operation)
+
 tools include:
 - barometric pressure correction (completed)
 - offset correction for sensor level (completed)
