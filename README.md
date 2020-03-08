@@ -39,5 +39,5 @@ The approach taken here is described below.
 6. The latest drift offset and the change in drift over time is provided as part of the quality reporting.
 
 ## Data quality review and reporting
-Unforeseen issues will occur with the data collection and processing. Through incluson of automatic quality reviewing provides a mechanism to flag when manual review of the data may be required.
+Unforeseen issues will occur with the data collection and processing. Incluson of automatic quality reviewing provides a mechanism to flag when manual review of the data may be required.
 
