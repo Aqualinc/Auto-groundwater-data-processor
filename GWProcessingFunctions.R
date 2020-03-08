@@ -4,7 +4,7 @@
 #' 
 #'   This function reads in a SOLIST level logger xml file from the Christchurch shallow bore network, and converts it into a zoo timeseries of depth and temperature.
 #'   If the LEVEL data are in psi or kPa then it is converted to metres head.
-#' @param XMLData a timeseries object in xml format
+#' @param XMLFile a timeseries object in xml format
 #' @value A list which includes a POSIXct zoo object of LEVEL (m of head) and temperature (oC), a Battery Level value, Location description string, APP number, Zone number
 #' @keywords xml
 #' @export
@@ -68,6 +68,59 @@ ReadXMLData <- function(XMLFile) {
    return(OutputList)
 }
 
+#' Import a Solist  ".csv" (comma-separated-variable text) file and turn into a zoo object
+#' 
+#'   This function reads in a SOLIST level logger csv file from the Christchurch shallow bore network, and converts it into a zoo timeseries of depth and temperature.
+#'   If the LEVEL data are in psi or kPa then it is converted to metres head.
+#' @param csvFile a timeseries object in csv format
+#' @value A list which includes a POSIXct zoo object of LEVEL (m of head) and temperature (oC), a Battery Level value, Location description string, APP number, Zone number
+#' @keywords csv
+#' @export
+#' @examples
+#' ReadXMLData() 
+
+ReadcsvData <- function(csvFile) {
+
+  #Test for and load any libraries that are needed
+  if (!require(zoo)) install.packages('zoo'); library(zoo)
+  
+  #Define the multipliers to convert from kPa or psi air pressure to metres of head
+  ConversionFactors <- c(kPa=0.10199773339984, psi = 0.70324961490205) #from https://www.convertunits.com
+  
+  #Load the header information from the file
+  HeaderData <- readLines(csvFile, n = 11)
+  
+  
+  #Load the data
+  data <- read.table(csvFile,sep=",",skip=which(HeaderData  == "TEMPERATURE")+1, header=TRUE,colClasses = c("character","character",rep("numeric",3)))
+  
+  #Get the battery level
+  BatteryLevel <- NA
+  
+  #Get the Location description. This is the line immediately after the line called "Location:"
+  LocationDescription <- HeaderData[which(HeaderData == "Location:") + 1]
+  
+  #Get the Project ID
+  ProjectID <- HeaderData[which(HeaderData == "Project ID:")+1]
+  #Extract the APP number from the Project ID. This is assumed to be the first 1 to 3 digits after the case insentive letters "APP"
+  APPNumber <- as.numeric(sub(".*APP\\s*([1-9][0-9]{0,2}).*","\\1", ProjectID, ignore.case = TRUE))
+  #Extract the Zone number from the Project ID. This is assumed to be the first single digit number after the case insensitive word "zone"
+  ZoneNumber <- as.numeric(sub(".*Zone\\s*([0-9]).*","\\1", ProjectID, ignore.case = TRUE))
+
+  LEVELUnits <- sub(".*: ","",HeaderData[which(HeaderData == "LEVEL")+ 1])
+  #Check the units of the LEVEL channel and convert to metres head if necesary
+  if( LEVELUnits != "m") data$LEVEL <- data$LEVEL * ConversionFactors[LEVELUnits]
+  
+  #Turn the dates and time into a POSIXct object. Annoyingly the date format is different compared to the .xle files.
+  DateTime <- as.POSIXct(paste(data$Date,data$Time),format = "%d/%m/%Y %H:%M:%S", tz = "Etc/GMT-12")
+  
+  #Create a zoo timeseries
+  OutputData <- zoo(data.frame(LEVEL=data$LEVEL,TEMPERATURE=data$TEMPERATURE),order.by = DateTime)
+  OutputList <- list(Data = OutputData, Battery = BatteryLevel, Location = LocationDescription, APP = APPNumber, Zone = ZoneNumber)
+  return(OutputList)
+}
+
+
 
 #' Barometric Correction
 #'
@@ -120,18 +173,22 @@ BarometricCorrection <- function(GWSeries, AirPressureSeries, SensorLevelBelowSu
 #' BarometricCorrection()
 #' 
 BaroDataMerging <- function(DataDirectory) {
+  #Test for and load any libraries that are needed
+  if (!require(tools)) install.packages('tools'); library(tools)
   
   #Get all the airpressure logger files to process
-  BaroFilesToProcess <- list.files(path = DataDirectory, pattern = '(?i)^.*BARO.*xle$', recursive = TRUE, full.names = TRUE)
-  
-  BaroData <- lapply(BaroFilesToProcess, ReadXMLData)
+  BaroFilesToProcess <- list.files(path = DataDirectory, pattern = '(?i)^.*BARO.*$', recursive = TRUE, full.names = TRUE)
+  BaroData <- lapply(BaroFilesToProcess, function(SingleBaroFile) {
+    if(file_ext(SingleBaroFile) == "xle") OutData <- ReadXMLData(SingleBaroFile)
+    if(file_ext(SingleBaroFile) == "csv") OutData <- ReadcsvData(SingleBaroFile)
+    return(OutData)
+    })
   
   Zones <- sapply(BaroData, '[[','Zone')
   
-  #Work through each zone and build up a master barometric file
+  #Work through each zone and build up a master barometric file. Zone 0 is a special case invented to signify all zones.
   ZoneBaroData <- lapply(unique(Zones), function(Zone) {
-    #browser()
-    #Extract all the data files associated with the zone of interest
+    #Extract all the data files associated with the zone of interest, and any in zone 0.
     ListIndices <- which(Zones == Zone)
     BarosOfInterest <- BaroData[ListIndices]
     LEVELsOfInterest <- lapply(BarosOfInterest, function(x) x[['Data']]$'LEVEL')
@@ -141,6 +198,7 @@ BaroDataMerging <- function(DataDirectory) {
     if(!is.null(ncol(MergedData))) MergedData <- zoo(rowMeans(MergedData,na.rm=TRUE), index(MergedData))
     return(MergedData)
   })
+  
   
   names(ZoneBaroData) <- paste0("Zone",unique(Zones))
   return(ZoneBaroData)
