@@ -60,7 +60,7 @@ invisible(lapply(FilesToProcess, function(SingleFile) {
   SensorDepth <- APPMetaData$SensorDepth[APPMetaData$APPNo == APPNo]
   
   #Do the correction for air pressure and sensor depth. Note that I use Zone 0 as this is an invented zone that represents all zones. The ECan barometric data has been set to this zone when their data was formatted to match the standard download format.
-  BaroCorrectedData <- BarometricCorrection(RawData[[1]]$'LEVEL',BaroData[[0]],SensorLevelBelowSurface = SensorDepth)
+  BaroCorrectedData <- BarometricCorrection(RawData[[1]]$'LEVEL',BaroData[['Zone0']],SensorLevelBelowSurface = SensorDepth)
   
   OutputData <- data.frame(Date = format(index(BaroCorrectedData),"%d/%m/%Y"),
                            Time = format(index(BaroCorrectedData),"%I:%M:%S %p"),
