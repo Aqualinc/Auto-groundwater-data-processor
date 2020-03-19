@@ -1,0 +1,97 @@
+
+title: "R Notebook to combine new APP piezometer data to the previous data"
+output: html_notebook
+---
+Project WL20023 Christchurch City Council APP..
+Prepared by Tim Kerr, Rainfall.NZ for Aqualinc.
+March 2020
+
+Background
+Christchurch City Council have a large number of piezometers measuring groundwater levels at short intervals (10 minutes).
+These piezometers are downloaded intermittantly.
+Its helpfull to stitch the data together after each download.
+
+```{r}
+if (!require(zoo)) install.packages("zoo"); library(zoo)
+if (!require(lubridate)) install.packages("lubridate"); library(lubridate)
+
+PreviousDataDirectory <- "H:\\WL Projects\\WL18036_EQC Earthquake Commission\\Data\\HighResolutionData\\Combined_Sept16_Sept18\\Inverted_csv_files"
+LatestDataDirectory <- "H:\\WL Projects\\WL20023_CCC APP\\Data 2020\\BaroAndOffsetCorrected"
+
+
+SaveDataDirectory <- "H:\\WL Projects\\WL20023_CCC APP\\Data 2020\\AllData"
+
+#Prepare a list of all the APP numbers
+
+#Get a file list from the download data directorys
+DownloadFileNames <- list.files(path=c(PreviousDataDirectory,LatestDataDirectory),pattern="^APP[0-9]*_[0-9]*-[0-9]*.csv",recursive =TRUE,full.names = TRUE)
+                       
+#Parse the file names to give just the APP numbers
+APPNumbers <- as.numeric(sub(pattern="^APP([0-9]*)_.*csv","\\1",x=basename(DownloadFileNames)))
+
+#Get just the unique APP numbers
+APPNumbersUnique <- unique(APPNumbers)
+
+
+#Concatenate the download files for each site writing a new file for each one as we go
+
+for (APPNumber in APPNumbersUnique) { #APPNumber <- 227
+  #Get the filenames associated with that APP number, but don't use the "initial_QA" files as in at least one case (APP 5), the initial_QA and the first proper download have the same time, but different values in the data.
+  
+  #browser()
+  
+  print(paste("Processing APP number",APPNumber))
+  FileIndices <- which(APPNumbers == APPNumber)
+  
+  GWFiles <- DownloadFileNames[FileIndices]
+
+  #load these files without headers, stick them together, and then stick them in the complete file, removing any duplicate date-time entries.
+  InputDataLists <- lapply(GWFiles, function(FileOfInterest) {  #FileOfInterest <- GWFiles[1]
+    GroundwaterRawData <- read.csv(FileOfInterest, stringsAsFactors = FALSE)
+    return(GroundwaterRawData[,c("Date","Time","LEVEL","TEMPERATURE")])
+  } )
+  #browser()
+  InputDataCombined <- do.call("rbind", InputDataLists)
+  
+  #It seems the locale is different from machine to machine. I have locale on my laptop set to "English_New zealand.1252" which has the am/pm format as am/pm or AM/PM, but NOT a.m./p.m.. So completely different to what was working at Aqualinc! I haven't check ed the Aqualinc locale yet.
+  
+  #I need to get the date and time in order, so turn it into a zoo time series object using the date and time columns to build the index
+  #There is this annoying thing where am and pm are not recognsed but a.m. and p.m. are. Apparently this is a "locale" thing.
+  #So i need to replace the am's with a.m. and the pm's with p.m.
+  #
+  #InputDataCombined$Time <- sub("am","a.m.",InputDataCombined$Time)
+  #InputDataCombined$Time <- sub("pm","p.m.",InputDataCombined$Time)
+  #InputDataCombined$Time <- sub("AM","a.m.",InputDataCombined$Time)
+  #InputDataCombined$Time <- sub("PM","p.m.",InputDataCombined$Time)
+  
+  InputDataCombined$Time <- sub("a.m.","am",InputDataCombined$Time)
+  InputDataCombined$Time <- sub("p.m.","pm",InputDataCombined$Time)
+
+  
+  #Even more annoyingly, the time is not in a consistent format between files, sometimes it has the am/pm sometimes it has a 24 hour time.
+  #So I need to convert both types and stick them together. The below !!!!DOES NOT WORK!!!
+  #The %I turns 13 hours into 1 am!!!
+  InputDataCombined$DateTime <- as.POSIXct(paste(InputDataCombined$Date,InputDataCombined$Time),
+                          format="%d/%m/%Y %I:%M:%S %p",origin="1970-01-01",tz="Etc/GMT-12")
+
+  #Remove duplicates
+  InputDataCombinedNoDuplicates <- InputDataCombined[!duplicated(InputDataCombined$DateTime,fromLast=TRUE),]
+  
+  #Re-order based on time
+  InputDataCombinedNoDuplicates <- InputDataCombinedNoDuplicates[order(InputDataCombinedNoDuplicates$DateTime),]
+  
+  #Make the Time column format consistent for all records/rows
+  InputDataCombinedNoDuplicates$Time <- format(InputDataCombinedNoDuplicates$DateTime,"%H:%M:%S")
+  
+
+  #So now I'm ready to make a nice time series object - I don't think I need this any more
+  #InputDataZoo <- zoo(InputDataCombinedNoDuplicates[,c("LEVEL","ms","TEMPERATURE")],order.by=InputDataCombinedNoDuplicates$DateTime)
+  #InputDataZoo <- zoo(InputDataCombinedNoDuplicates,order.by=InputDataCombinedNoDuplicates$DateTime)
+  
+  #Export it all to a new csv
+  StartDate <- format(min(InputDataCombinedNoDuplicates$DateTime,na.rm=TRUE),"%Y%m%d")
+  EndDate <- format(max(InputDataCombinedNoDuplicates$DateTime,na.rm=TRUE),"%Y%m%d")
+  CombinedFilename <- paste0("APP",formatC(APPNumber,width=4,flag="0"),"_",StartDate,"-",EndDate,".csv")
+  write.table(InputDataCombinedNoDuplicates[,c("Date","Time","LEVEL","TEMPERATURE")],file.path(SaveDataDirectory,CombinedFilename),quote=FALSE,row.names = FALSE,sep=",")
+}
+```
