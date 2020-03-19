@@ -27,6 +27,8 @@ APPMetadataFile <- file.path(AutoProcessingDirectory,"AppMetadata.csv")
 Load some helpful libraries
 ```{r}
 if (!require(tools)) install.packages('tools'); library(tools)
+if (!require(readxl)) install.packages('readxl'); library(readxl)
+if (!require(lubridate)) install.packages('lubridate'); library(lubridate)
 ```
 
 
@@ -76,5 +78,88 @@ invisible(lapply(FilesToProcess, function(SingleFile) {
   return()
 }))
 
+```
+
+
+Compare the compensated data to the dipped data. The dipped data is a bit custom, so not really able to make a generic function for it. 
+```{r}
+LoggerDataDirectory <- "H:\\WL Projects\\WL20023_CCC APP\\Data 2020\\BaroAndOffsetCorrected"
+DippedDataFile <- "H:\\WL Projects\\WL20023_CCC APP\\Data 2020\\Monitoring Spreadsheet\\20200221.Piezometer Downloads_TIM K.xlsx"  #Aqualinc servers via Tims laptop
+DippedDataFile <- "D:\\Projects\\Aqualinc\\projects\\APP\\Auto-groundwater-data-processor\\20200221.Piezometer Downloads_TIM K.xlsx" #Copy on Tim's laptop
+
+LoggerDataFiles <- list.files(LoggerDataDirectory, full.names = TRUE)
+DippedData <- read_xlsx(DippedDataFile, sheet = "TIM K", range= cell_cols("B:L"))
+#Explicitly force the ingested timezone to be NZST, overriding the read_xls default of UTC
+DippedData$Date <- force_tz(DippedData$Date, "Etc/GMT+12")
+
+#When importing, the times that were recognised as times were converted to an excel time object (i.e. a decimal number representing a fraction of a day). All the others were left as text. Because all the values in a column within R need to be one "type" they are all conveted to "character" on import. This makes a mess!
+
+#Of the time strings that still need converting, the format varies, so they need to be standardised.
+Times <- DippedData$Time
+
+#convert all the "am" and "pm" variants to  "AM" and "PM"
+Times <- sub(" a.m"," AM",Times)
+Times <- sub(" p.m"," PM",Times)
+Times <- sub("a.m."," AM",Times)
+Times <- sub("p.m."," PM",Times)
+Times <- sub("a.m"," AM",Times)
+Times <- sub("p.m"," PM",Times)
+Times <- sub("A.M.","AM",Times)
+Times <- sub("P.M.","PM",Times)
+
+#Now that all they can be converted into a time object, but only do the entries that don't look numeric.
+#To allign with the excel numeric format, convert from seconds to fractions of a day, and make the origin the POSIXct origin (1970-01-01)
+Times3[which(is.na(as.numeric(Times)))] <-
+as.character(as.numeric(parse_date_time(paste("1970-01-01", Times[which(is.na(as.numeric(Times)))]),"%Y-%m-%d %I:%M:%S %p"))/(60*60*24))
+
+#Can now convert them
+Times5 <- as.POSIXct(3600 * as.numeric(Times3), origin = "1970-01-01", tz="Etc/GMT+12")
+
+#And add them to the dates
+DippedData$DateTimes <- DippedData$Date + Times4 * 3600 * 24
+
+
+#Work through each APP number in turn, get the dipped data and the time of measurement and get the associated logged data, then compare the two
+#DippedQC <- lapply(seq_along(DippedData$`APP No.`), function(Index) {   #Index = 2
+  DippedQC <- lapply(seq_along(DippedData$`APP No.`[1:15]), function(Index) {   #Index = 3
+  APPNo       <- DippedData$`APP No.`[Index]
+  print(APPNo)
+
+  DIppedDepth <- DippedData$`Dipped water level 2020 (m)`[Index]
+  if(!is.na(DIppedDepth)){
+  DippedDate  <- DippedData$DateTimes[Index]
+  LoggerDataFilesIndices <- which(startsWith(basename(LoggerDataFiles), sprintf("APP%04.0f", APPNo)))
+  
+  #If there is only one file then open it
+  if(length(LoggerDataFilesIndices)==1) {
+    LoggedDataRaw <- read.table(LoggerDataFiles[LoggerDataFilesIndices],header=TRUE,sep=",",stringsAsFactors = FALSE)
+  } else if(length(LoggerDataFilesIndices)>1) {
+    #If there is more than one, then open them both and combine them
+    LoggedDataRaw <- read.table(LoggerDataFiles[LoggerDataFilesIndices[1]],header=TRUE,sep=",",stringsAsFactors = FALSE)
+    for(FileIndex in LoggerDataFilesIndices[-1]) {
+      LoggedDataRaw <- rbind(LoggedDataRaw,read.table(LoggerDataFiles[FileIndex],header=TRUE,sep=",",stringsAsFactors = FALSE))
+    }} else {
+      #If there are none, then output null
+      LoggedDataRaw <- NULL 
+    }
+  LoggedDataRaw$Time <- sub("a.m.","AM",LoggedDataRaw$Time)
+  LoggedDataRaw$Time <- sub("p.m.","PM",LoggedDataRaw$Time)
+  LoggedDataDates    <- as.POSIXct(paste(LoggedDataRaw$Date,LoggedDataRaw$Time),format="%d/%m/%Y %I:%M:%S %p",tz="Etc/GMT+12")
+  IndexOfClosestLoggerObservation <- which(abs(LoggedDataDates-DippedDate) == min(abs(LoggedDataDates - DippedDate)))[1]
+  LoggedDepth        <- LoggedDataRaw$LEVEL[IndexOfClosestLoggerObservation] * -1 #multiply by negative 1 to convert to depth, rather than height above measuring point
+  LoggedDateTime     <- LoggedDataDates[IndexOfClosestLoggerObservation]
+  DepthDifference    <- DIppedDepth - LoggedDepth
+  TimeDifference     <- as.numeric(abs(difftime(DippedDate,LoggedDateTime,units = "mins"))) 
+  Output             <- data.frame(APPNo = APPNo,DippedDateTime =  DippedDate, 'DippedDepth(m)' = DIppedDepth,
+                 LoggedDateTime = LoggedDateTime, 'LoggedDepth (m)' = LoggedDepth,
+                 'TimeDifference (minutes)'= TimeDifference, 'DepthDiff(m)' = DepthDifference)
+} else { #Case of no dip data
+    Output             <- data.frame(APPNo = APPNo,DippedDateTime =  NA, 'DippedDepth(m)' = NA,
+                 LoggedDateTime = NA, 'LoggedDepth (m)' = NA,
+                 'TimeDifference (minutes)'= NA, 'DepthDiff(m)' = NA)
+  }
+  return(Output)
+  })
+DipToAutoComparisonTable <- do.call(rbind,DippedQC)
 ```
 
