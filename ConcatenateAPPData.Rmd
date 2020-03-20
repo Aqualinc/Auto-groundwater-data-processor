@@ -11,6 +11,9 @@ Christchurch City Council have a large number of piezometers measuring groundwat
 These piezometers are downloaded intermittantly.
 Its helpfull to stitch the data together after each download.
 
+********** There is an issue with the am/pm formatting. This needs to be manually checked each time.
+This could be turned into a function which accepted Old directory, and new directory, and save directory, and magic could then happen.
+
 ```{r}
 if (!require(zoo)) install.packages("zoo"); library(zoo)
 if (!require(lubridate)) install.packages("lubridate"); library(lubridate)

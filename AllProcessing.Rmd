@@ -109,19 +109,21 @@ Times <- sub("P.M.","PM",Times)
 
 #Now that all they can be converted into a time object, but only do the entries that don't look numeric.
 #To allign with the excel numeric format, convert from seconds to fractions of a day, and make the origin the POSIXct origin (1970-01-01)
-Times3[which(is.na(as.numeric(Times)))] <-
+Times[which(is.na(as.numeric(Times)))] <-
 as.character(as.numeric(parse_date_time(paste("1970-01-01", Times[which(is.na(as.numeric(Times)))]),"%Y-%m-%d %I:%M:%S %p"))/(60*60*24))
 
 #Can now convert them
-Times5 <- as.POSIXct(3600 * as.numeric(Times3), origin = "1970-01-01", tz="Etc/GMT+12")
+#Times5 <- as.POSIXct(3600 * as.numeric(Times), origin = "1970-01-01", tz="Etc/GMT+12")
+
+Times5 <- as.numeric(Times)
 
 #And add them to the dates
-DippedData$DateTimes <- DippedData$Date + Times4 * 3600 * 24
+DippedData$DateTimes <- DippedData$Date + Times5 * 3600 * 24
 
 
 #Work through each APP number in turn, get the dipped data and the time of measurement and get the associated logged data, then compare the two
-#DippedQC <- lapply(seq_along(DippedData$`APP No.`), function(Index) {   #Index = 2
-  DippedQC <- lapply(seq_along(DippedData$`APP No.`[1:15]), function(Index) {   #Index = 3
+DippedQC <- lapply(seq_along(DippedData$`APP No.`), function(Index) {   
+# DippedQC <- lapply(seq_along(DippedData$`APP No.`[1:5]), function(Index) {   #for testing
   APPNo       <- DippedData$`APP No.`[Index]
   print(APPNo)
 
@@ -161,5 +163,6 @@ DippedData$DateTimes <- DippedData$Date + Times4 * 3600 * 24
   return(Output)
   })
 DipToAutoComparisonTable <- do.call(rbind,DippedQC)
+write.table(DipToAutoComparisonTable,"H:\\WL Projects\\WL20023_CCC APP\\Data 2020\\Monitoring Spreadsheet\\DippedQC.csv",quote=FALSE,row.names = FALSE,sep=",")
 ```
 
