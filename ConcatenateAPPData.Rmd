@@ -26,7 +26,7 @@ SaveDataDirectory <- "H:\\WL Projects\\WL20023_CCC APP\\Data 2020\\AllData"
 
 #Prepare a list of all the APP numbers
 
-#Get a file list from the download data directorys
+#Get a file list from the download data directories
 DownloadFileNames <- list.files(path=c(PreviousDataDirectory,LatestDataDirectory),pattern="^APP[0-9]*_[0-9]*-[0-9]*.csv",recursive =TRUE,full.names = TRUE)
                        
 #Parse the file names to give just the APP numbers
@@ -38,7 +38,7 @@ APPNumbersUnique <- unique(APPNumbers)
 
 #Concatenate the download files for each site writing a new file for each one as we go
 
-for (APPNumber in APPNumbersUnique) { #APPNumber <- 227
+for (APPNumber in APPNumbersUnique) { #APPNumber <- 2
   #Get the filenames associated with that APP number, but don't use the "initial_QA" files as in at least one case (APP 5), the initial_QA and the first proper download have the same time, but different values in the data.
   
   #browser()
