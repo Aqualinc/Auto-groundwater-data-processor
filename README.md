@@ -8,6 +8,7 @@ This page provides a general description of what everything does.
 tools include:
 - barometric pressure correction (completed)
 - offset correction for sensor level (completed)
+- comparson of manual dips to logged depths (completed)
 - data logger drift correction to manual dips (yet to implement)
 - data quality review and reporting (yet to implement)
 
@@ -25,6 +26,9 @@ The groundwater level format requested by Environment Canterbury is the number o
 The height above the measuring point (as requested by Environment Canterbury) is the equivalent of a negative "depth to water below measurement point" in the above diagram. The sensor data, following correction for air-pressure variations, provide a measure of the depth of water above the sensor, shown as the "submergence depth" in the above diagram. Conversion from that measurement to a negative distance from the surface requires subtracting of the sensor "hanging depth" from the submergence pressure:
 
 *Groundwater level above measuring point = submergence pressure - hanging depth*
+## Comparson of manual dips to logged depths
+The manual measurements obtained at the begining and end of a downloaded time series are compared to the logged depths.
+A table is prepared that details the difference between the measurements. This was prepared to enable investigation of where corrections may need to be applied.
 
 ## Data logger drift correction to manual dips
 It is assumed that the data loggers drift over time. To correct for this drift, the logger measurements are regularly compared to manual measurements and adjusted if there is a difference.
