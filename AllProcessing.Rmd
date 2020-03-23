@@ -104,7 +104,7 @@ DippedEndData <- read_xlsx(DippedDataAtEndFile, sheet = "TIM K", range= cell_col
   DippedEndData <- DippedEndData[!is.na(DippedEndData$`APP No.`),]
   
 #Explicitly force the ingested timezone to be NZST, overriding the read_xls default of UTC
-DippedEndData$Date <- force_tz(DippedEndData$Date, "Etc/GMT+12")
+DippedEndData$Date <- force_tz(DippedEndData$Date, "Etc/GMT-12")
 
 #When importing, the times that were recognised as times were converted to an excel time object (i.e. a decimal number representing a fraction of a day). All the others were left as text. Because all the values in a column within R need to be one "type" they are all conveted to "character" on import. This makes a mess!
 
@@ -127,7 +127,7 @@ Times[which(is.na(as.numeric(Times)))] <-
 as.character(as.numeric(parse_date_time(paste("1970-01-01", Times[which(is.na(as.numeric(Times)))]),"%Y-%m-%d %I:%M:%S %p"))/(60*60*24))
 
 #Can now convert them
-#Times5 <- as.POSIXct(3600 * as.numeric(Times), origin = "1970-01-01", tz="Etc/GMT+12")
+#Times5 <- as.POSIXct(3600 * as.numeric(Times), origin = "1970-01-01", tz="Etc/GMT-12")
 
 Times5 <- as.numeric(Times)
 
@@ -145,7 +145,7 @@ DippedEndData$DateTimes <- DippedEndData$Date + Times5 * 3600 * 24
   
   #The dates are read in as character, even though they should be numbers, so need to be converted to POSIXct but with an excel origin
   #Care is needed to get the time zone correct.
-  DateRead <- as.POSIXct(as.numeric(DippedStartData$'Date Read')*60*60*24,origin=as.POSIXct("1899-12-30 00:00:00", tz= "Etc/GMT+12"),tz="Etc/GMT+12")
+  DateRead <- as.POSIXct(as.numeric(DippedStartData$'Date Read')*60*60*24,origin=as.POSIXct("1899-12-30 00:00:00", tz= "Etc/GMT-12"),tz="Etc/GMT-12")
 
 #the times are read in as characters, even though they should be a decimal number representing a fraction of a day).
 #To create an R Date-time, need to, add the times to the dates. The times needed to be converted from fractions of a day to seconds
@@ -176,7 +176,7 @@ DippedQC <- lapply(seq_along(DippedEndData$`APP No.`), function(Index) {
     }
   LoggedDataRaw$Time <- sub("a.m.","AM",LoggedDataRaw$Time)
   LoggedDataRaw$Time <- sub("p.m.","PM",LoggedDataRaw$Time)
-  LoggedDataDates    <- as.POSIXct(paste(LoggedDataRaw$Date,LoggedDataRaw$Time),format="%d/%m/%Y %H:%M:%S",tz="Etc/GMT+12")
+  LoggedDataDates    <- as.POSIXct(paste(LoggedDataRaw$Date,LoggedDataRaw$Time),format="%d/%m/%Y %H:%M:%S",tz="Etc/GMT-12")
 
   #Get the end dips
   DIppedEndDepth <- DippedEndData$`Dipped water level 2020 (m)`[Index]
