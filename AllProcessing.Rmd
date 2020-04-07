@@ -242,3 +242,46 @@ DipToAutoComparisonTable <- do.call(rbind,DippedQC)
 write.table(DipToAutoComparisonTable,"H:\\WL Projects\\WL20023_CCC APP\\Data 2020\\Monitoring Spreadsheet\\DippedQC.csv",quote=FALSE,row.names = FALSE,sep=",")
 ```
 
+Need to check whether an offset was introduced because of the downloading
+Get the first date of the latest download, check the logged depth for that time and the time immediately before it
+Identify any loggers with an offset of more than 10 cm.
+```{r}
+AllDataDirectory <- "H:\\WL Projects\\WL20023_CCC APP\\Data 2020\\AllData"
+LatestDataDirectory <- "H:\\WL Projects\\WL20023_CCC APP\\Data 2020\\BaroAndOffsetCorrected"
+
+#Get all the filenames from the latest data download
+LatestDataFiles <- list.files(LatestDataDirectory, full.names = TRUE)
+
+#Work through each file in turn
+OffsetDetection <- lapply(seq_along(LatestDataFiles), function(CurrentFileIndex) {
+  CurrentFileName <- LatestDataFiles[CurrentFileIndex]
+  APPNo <- as.numeric(sub("^APP([0-9]*)_.*","\\1",basename(CurrentFileName)))
+  #Read the first data line from the file and get the first date time
+  FirstLine <- readLines(CurrentFileName,2,)[2]
+  #Get the date and time of the first line
+  DateTimeText <- paste(strsplit(FirstLine,",")[[1]][1:2],collapse=" ")
+  
+  #Now go through the rediculous process of getting the a.m./p.m. correct
+    DateTimeText <- sub("a.m.","am",DateTimeText)
+  DateTimeText <- sub("p.m.","pm",DateTimeText)
+  
+  DateTime <- as.POSIXct(DateTimeText, format = "%d/%m/%Y %I:%M:%S %p",tz = "Etc/GMT-12")
+  
+  #Now find the index of this date in the complete data record, and have a look at the level for the time, and the previous time
+  #Start by opening the correct file. Assume there is only one for each APP number
+  CompleteDataFileOfInterest <- list.files(AllDataDirectory,pattern = sprintf("^APP%04.0f_.*",APPNo), full.names = TRUE)[1]
+  CompleteData <- read.table(CompleteDataFileOfInterest,sep=",",stringsAsFactors = FALSE,header=TRUE)
+  CompleteDateTime <- as.POSIXct(paste(CompleteData$Date,CompleteData$Time),format="%d/%m/%Y %H:%M:%S",tz= "Etc/GMT-12")
+  IndexOfStartofMostRecentDataDownload <- which.min(abs(CompleteDateTime - DateTime))
+  DeltaLevel <- diff(CompleteData$LEVEL[c((IndexOfStartofMostRecentDataDownload-1),(IndexOfStartofMostRecentDataDownload+1))])
+  LevelChangeSummary <- data.frame(FirstNewLoggedLevel =CompleteData$LEVEL[IndexOfStartofMostRecentDataDownload], FirstNewLoggedDateTime =CompleteDateTime[IndexOfStartofMostRecentDataDownload],
+             SecondNewLoggedLevel=CompleteData$LEVEL[IndexOfStartofMostRecentDataDownload + 1],SecondNewLoggedDateTime=CompleteDateTime[IndexOfStartofMostRecentDataDownload + 1],
+             LastOldLoggedLevel =CompleteData$LEVEL[IndexOfStartofMostRecentDataDownload - 1], LastOldLoggedDateTime=CompleteDateTime[IndexOfStartofMostRecentDataDownload - 1],
+             LevelDifference = DeltaLevel)
+  return(LevelChangeSummary)
+})
+
+StepChangeOnDownloadQCTable <- do.call(rbind,OffsetDetection)
+write.table(StepChangeOnDownloadQCTable,"H:\\WL Projects\\WL20023_CCC APP\\Data 2020\\Monitoring Spreadsheet\\StepChangeOnDownloadQC.csv",quote=FALSE,row.names = FALSE,sep=",")
+```
+

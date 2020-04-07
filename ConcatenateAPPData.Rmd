@@ -41,7 +41,7 @@ APPNumbersUnique <- unique(APPNumbers)
 
 #Concatenate the download files for each site writing a new file for each one as we go
 
-for (APPNumber in APPNumbersUnique) { #APPNumber <- 3
+for (APPNumber in APPNumbersUnique[12:length(APPNumbersUnique)]) { #APPNumber <- 3
   #Get the filenames associated with that APP number, but don't use the "initial_QA" files as in at least one case (APP 5), the initial_QA and the first proper download have the same time, but different values in the data.
   
   #browser()
