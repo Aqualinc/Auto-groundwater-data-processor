@@ -274,7 +274,7 @@ OffsetDetection <- lapply(seq_along(LatestDataFiles), function(CurrentFileIndex)
   CompleteDateTime <- as.POSIXct(paste(CompleteData$Date,CompleteData$Time),format="%d/%m/%Y %H:%M:%S",tz= "Etc/GMT-12")
   IndexOfStartofMostRecentDataDownload <- which.min(abs(CompleteDateTime - DateTime))
   DeltaLevel <- diff(CompleteData$LEVEL[c((IndexOfStartofMostRecentDataDownload-1),(IndexOfStartofMostRecentDataDownload+1))])
-  LevelChangeSummary <- data.frame(FirstNewLoggedLevel =CompleteData$LEVEL[IndexOfStartofMostRecentDataDownload], FirstNewLoggedDateTime =CompleteDateTime[IndexOfStartofMostRecentDataDownload],
+  LevelChangeSummary <- data.frame(APPNo = APPNo, FirstNewLoggedLevel =CompleteData$LEVEL[IndexOfStartofMostRecentDataDownload], FirstNewLoggedDateTime =CompleteDateTime[IndexOfStartofMostRecentDataDownload],
              SecondNewLoggedLevel=CompleteData$LEVEL[IndexOfStartofMostRecentDataDownload + 1],SecondNewLoggedDateTime=CompleteDateTime[IndexOfStartofMostRecentDataDownload + 1],
              LastOldLoggedLevel =CompleteData$LEVEL[IndexOfStartofMostRecentDataDownload - 1], LastOldLoggedDateTime=CompleteDateTime[IndexOfStartofMostRecentDataDownload - 1],
              LevelDifference = DeltaLevel)
