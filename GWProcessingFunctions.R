@@ -192,7 +192,6 @@ BaroDataMerging <- function(DataDirectory) {
     ListIndices <- which(Zones == Zone)
     BarosOfInterest <- BaroData[ListIndices]
     LEVELsOfInterest <- lapply(BarosOfInterest, function(x) x[['Data']]$'LEVEL')
-    
     #Merge the data, then find the row averages if there are multiple series. This covers the possibility of overlapping times
     MergedData <- do.call(merge, LEVELsOfInterest)
     if(!is.null(ncol(MergedData))) MergedData <- zoo(rowMeans(MergedData,na.rm=TRUE), index(MergedData))

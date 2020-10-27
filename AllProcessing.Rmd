@@ -12,13 +12,15 @@ source("D:\\Projects\\Aqualinc\\projects\\APP\\Auto-groundwater-data-processor\\
 
 #Set some directories and filenames
 #DataDirectory <- "G:\\ARL Projects\\WL Projects\\WL18036_EQC Earthquake Commission\\Data\\HighResolutionData\\FromT_T_January2019\\DH1 - DH4\\DH1-DH4 Raw"
-DataDirectory <- "H:\\WL Projects\\WL20023_CCC APP\\Data 2020"
+#DataDirectory <- "H:\\WL Projects\\WL20023_CCC APP\\Data_Winter_2020"
+DataDirectory <- "D:\\Projects\\Aqualinc\\projects\\APP\\Data\\Data Harvest 202009"
 
 #OutputDataDirectory <- "G:\\ARL Projects\\WL Projects\\WL18036_EQC Earthquake Commission\\R\\Auto-groundwater-data-processor\\OutputData"
-OutputDataDirectory <- "H:\\WL Projects\\WL20023_CCC APP\\Data 2020\\BaroAndOffsetCorrected"
+#OutputDataDirectory <- "H:\\WL Projects\\WL20023_CCC APP\\Data_Winter_2020\\BaroAndOffsetCorrected"
+OutputDataDirectory <- "D:\\Projects\\Aqualinc\\projects\\APP\\Data\\Data Harvest 202009\\BaroAndOffsetCorrected"
 
 #AutoProcessingDirectory <- "G:\\ARL Projects\\WL Projects\\WL18036_EQC Earthquake Commission\\R\\Auto-groundwater-data-processor"
-AutoProcessingDirectory <- "C:\\Users\\Owner\\Documents\\Projects\\Aqualinc\\APP\\Auto-groundwater-data-processor"
+AutoProcessingDirectory <- "D:\\Projects\\Aqualinc\\projects\\APP\\Auto-groundwater-data-processor"
 
 APPMetadataFile <- file.path(AutoProcessingDirectory,"AppMetadata.csv")
 ```
@@ -42,9 +44,11 @@ APPMetaData <- read.csv(APPMetadataFile)
 
 #Get a list of the files to use
 #FilesToProcess <- list.files(path = file.path(DataDirectory,"Data Harvest 1"), pattern = '[1-9][0-9,_]*\\.xle$', recursive = TRUE, full.names = TRUE)
-FilesToProcess <- list.files(path = DataDirectory, pattern = '2020.*\\.csv$', recursive = FALSE, full.names = TRUE)
+#FilesToProcess <- list.files(path = DataDirectory, pattern = '2020.*\\.csv$', recursive = FALSE, full.names = TRUE)
+#Annoyingly the filenaming convention changed for the winter 2020 download.
+FilesToProcess <- list.files(path = DataDirectory, pattern = 'APP\\d+_\\d{8}\\.csv$', recursive = FALSE, full.names = TRUE)
 
-FilesToProcess <- FilesToProcess[1:2]
+#FilesToProcess <- FilesToProcess[1:2] #For testing
 
 invisible(lapply(FilesToProcess, function(SingleFile) {
 
@@ -63,7 +67,6 @@ invisible(lapply(FilesToProcess, function(SingleFile) {
   
   #Do the correction for air pressure and sensor depth. Note that I use Zone 0 as this is an invented zone that represents all zones. The ECan barometric data has been set to this zone when their data was formatted to match the standard download format.
   BaroCorrectedData <- BarometricCorrection(RawData[[1]]$'LEVEL',BaroData[['Zone0']],SensorLevelBelowSurface = SensorDepth)
-  
   OutputData <- data.frame(Date = format(index(BaroCorrectedData),"%d/%m/%Y"),
                            Time = format(index(BaroCorrectedData),"%I:%M:%S %p"),
                            LEVEL = coredata(BaroCorrectedData),
@@ -86,30 +89,30 @@ Compare the compensated data to the dipped data. The dipped data is a bit custom
 There are two dips, one taken during the download, complete with data and time of dip.
 The second is the dip from the 2019 download. This doesn't appear to have date and time details. The best that can be done is to assume that it relates to the start of the record for the latest download.
 ```{r}
-LoggerDataDirectory <- "H:\\WL Projects\\WL20023_CCC APP\\Data 2020\\AllData"
-DippedDataAtEndFile <- "H:\\WL Projects\\WL20023_CCC APP\\Data 2020\\Monitoring Spreadsheet\\20200221.Piezometer Downloads_TIM K.xlsx" #Aqualinc servers via Tims laptop
+LoggerDataDirectory <- "H:\\WL Projects\\WL20023_CCC APP\\AllData"
+#DippedDataAtEndFile <- "H:\\WL Projects\\WL20023_CCC APP\\Data 2020\\Monitoring Spreadsheet\\20200221.Piezometer Downloads_TIM K.xlsx" #Aqualinc servers via Tims laptop
+DippedDataAtEndFile <- "D:\\Projects\\Aqualinc\\projects\\APP\\Auto-groundwater-data-processor\\Location-ordered July2020 APP Download Fieldsheet.xlsx" #Copy on Tim's laptop
 
-DippedDataAtEndFile <- "D:\\Projects\\Aqualinc\\projects\\APP\\Auto-groundwater-data-processor\\20200221.Piezometer Downloads_TIM K.xlsx" #Copy on Tim's laptop
-
-DippedDataAtStartFile <- "H:\\WL Projects\\WL20023_CCC APP\\T&T Stocktake 2019\\ECan EQC stocktake\\Aqualinc\\Aug2019.Piezometer Stocktake_Rev1.1.xlsx"   #Aqualinc servers via Tims laptop
-DippedDataAtStartFile <- "D:\\Projects\\Aqualinc\\projects\\APP\\Auto-groundwater-data-processor\\Aug2019.Piezometer Stocktake_Rev1.1.xlsx"     #On Tims Laptop
+#DippedDataAtStartFile <- "H:\\WL Projects\\WL20023_CCC APP\\T&T Stocktake 2019\\ECan EQC stocktake\\Aqualinc\\Aug2019.Piezometer Stocktake_Rev1.1.xlsx"   #Aqualinc servers via Tims laptop
+DippedDataAtStartFile <- "D:\\Projects\\Aqualinc\\projects\\APP\\Auto-groundwater-data-processor\\20200221.Piezometer Downloads_TIM K.xlsx"     #On Tims Laptop
 
 LoggerDataFiles <- list.files(LoggerDataDirectory, full.names = TRUE)
 
-#Get the dipped data taken during the download (i.e. the latest)
+#Get the dipped data taken at the previous download (i.e. at the begining of the data for thie current download)
+
 {
-DippedEndData <- read_xlsx(DippedDataAtEndFile, sheet = "TIM K", range= cell_cols("B:L"))
+DippedStartData <- read_xlsx(DippedDataAtStartFile, sheet = "TIM K", range= cell_cols("B:L"))
   
   #Remove any lines not related to an APP number (assumed blank lines)
-  DippedEndData <- DippedEndData[!is.na(DippedEndData$`APP No.`),]
+  DippedStartData <- DippedStartData[!is.na(DippedStartData$`APP No.`),]
   
 #Explicitly force the ingested timezone to be NZST, overriding the read_xls default of UTC
-DippedEndData$Date <- force_tz(DippedEndData$Date, "Etc/GMT-12")
+DippedStartData$Date <- force_tz(DippedStartData$Date, "Etc/GMT-12")
 
 #When importing, the times that were recognised as times were converted to an excel time object (i.e. a decimal number representing a fraction of a day). All the others were left as text. Because all the values in a column within R need to be one "type" they are all conveted to "character" on import. This makes a mess!
 
 #Of the time strings that still need converting, the format varies, so they need to be standardised.
-Times <- DippedEndData$Time
+Times <- DippedStartData$Time
 
 #convert all the "am" and "pm" variants to  "AM" and "PM"
 Times <- sub(" a.m"," AM",Times)
@@ -132,32 +135,41 @@ as.character(as.numeric(parse_date_time(paste("1970-01-01", Times[which(is.na(as
 Times5 <- as.numeric(Times)
 
 #And add them to the dates
-DippedEndData$DateTimes <- DippedEndData$Date + Times5 * 3600 * 24
+DippedStartData$DateTimes <- DippedStartData$Date + Times5 * 3600 * 24
 }
 
 
-#Get the dipped data taken at the previous download (i.e. at the begining of the data for thie current download)
+#Get the dipped data taken during the download (i.e. the latest)
 {
-  DippedStartData <- read_xlsx(DippedDataAtStartFile, sheet = "APP", range= cell_cols("A:K"))
+  DippedEndData <- read_xlsx(DippedDataAtEndFile, sheet = "Field use", range= cell_cols("A:L"),col_types = c("numeric",rep("skip",8),"date","text","numeric"))
   
-  #Remove any lines not related to an APP number (assumed blank lines)
-  DippedStartData <- DippedStartData[!is.na(DippedStartData$`APP No.`),]
+  #Remove any lines without a Date, assumed that they were not downloaded
+  DippedEndData <- DippedEndData[!is.na(DippedEndData$Date),]
   
-  #The dates are read in as character, even though they should be numbers, so need to be converted to POSIXct but with an excel origin
-  #Care is needed to get the time zone correct.
-  DateRead <- as.POSIXct(as.numeric(DippedStartData$'Date Read')*60*60*24,origin=as.POSIXct("1899-12-30 00:00:00", tz= "Etc/GMT-12"),tz="Etc/GMT-12")
-
-#the times are read in as characters, even though they should be a decimal number representing a fraction of a day).
-#To create an R Date-time, need to, add the times to the dates. The times needed to be converted from fractions of a day to seconds
-  DippedStartData$DateTimes <- DateRead + as.numeric(DippedStartData$'Time Read') * 3600 * 24
+  #the times are read in as characters, even though they should be a decimal number representing a fraction of a day).
+  #To create an R Date-time, need to, add the times to the dates. The times needed to be converted from fractions of a day to seconds
+  DippedEndData$DateTimes <- DippedEndData$Date + as.numeric(DippedEndData$'Time') * 3600 * 24
+  
+  #Explicitly force the time zone to NZST
+  DippedEndData$DateTimes <- force_tz(DippedEndData$DateTimes, "Etc/GMT-12")
 }
 
+
+#Check that all downloaded sites have a reading in the Field note spreadsheet.
+AllDownloadedSites <- list.files(path = c("D:\\Projects\\Aqualinc\\projects\\APP\\Data\\Data Harvest 202009\\BaroAndOffsetCorrected"), pattern = 'APP\\d+_\\d{8}.*\\.csv$', recursive = TRUE, full.names = FALSE)
+AllDownloadedSiteAPPNumbers <- as.numeric(sub(pattern="^APP([0-9]*)_.*csv","\\1",x=AllDownloadedSites))
+FieldNoteSites <- DippedEndData$`APP No.`[which(!is.na(DippedEndData$Time))]
+print(paste("APP sites missing in field note spreadsheet:",AllDownloadedSiteAPPNumbers[which(!AllDownloadedSiteAPPNumbers %in% FieldNoteSites)]))
+
+CompleteDataFileSites <- as.numeric(sub(pattern="^APP([0-9]*)_.*csv","\\1",x=basename(LoggerDataFiles)))
+print(paste("APP sites missing from the complete data holdings:",AllDownloadedSiteAPPNumbers[which(!AllDownloadedSiteAPPNumbers %in% CompleteDataFileSites)]))
 
 #Work through each APP number in turn, get the dipped data and the time of measurement and get the associated logged data, then compare the two
-DippedQC <- lapply(seq_along(DippedEndData$`APP No.`), function(Index) {   
- #DippedQC <- lapply(seq_along(DippedEndData$`APP No.`[1:5]), function(Index) {   #for testing Index <- 209
-  APPNo       <- DippedEndData$`APP No.`[Index]
+   
+ DippedQC <- lapply(seq_along(AllDownloadedSiteAPPNumbers), function(Index) {   #for testing Index <- 82
+  APPNo       <- AllDownloadedSiteAPPNumbers[Index]
   print(APPNo)
+  DippedEndDataIndex <- which(DippedEndData$`APP No.`== APPNo)
   
   #Get the related logger data
     LoggerDataFilesIndices <- which(startsWith(basename(LoggerDataFiles), sprintf("APP%04.0f", APPNo)))
@@ -179,10 +191,10 @@ DippedQC <- lapply(seq_along(DippedEndData$`APP No.`), function(Index) {
   LoggedDataDates    <- as.POSIXct(paste(LoggedDataRaw$Date,LoggedDataRaw$Time),format="%d/%m/%Y %H:%M:%S",tz="Etc/GMT-12")
 
   #Get the end dips
-  DIppedEndDepth <- DippedEndData$`Dipped water level 2020 (m)`[Index]
+  DippedEndDepth <- DippedEndData$`Dipped Water Level (m) Winter 2020`[DippedEndDataIndex]
 
-  if(!is.na(DIppedEndDepth)){
-  DippedEndDate  <- DippedEndData$DateTimes[Index]
+  if(!is.na(DippedEndDepth)){
+  DippedEndDate  <- DippedEndData$DateTimes[DippedEndDataIndex]
   if(length(LoggedDataDates) > 0){
   IndexOfClosestLoggerEndObservation <- which(abs(LoggedDataDates-DippedEndDate) == min(abs(LoggedDataDates - DippedEndDate),na.rm = TRUE))[1]
   LoggedEndDepth        <- LoggedDataRaw$LEVEL[IndexOfClosestLoggerEndObservation] * -1 #multiply by negative 1 to convert to depth, rather than height above measuring point
@@ -192,7 +204,7 @@ DippedQC <- lapply(seq_along(DippedEndData$`APP No.`), function(Index) {
   }
     
   LoggedEndDateTime     <- LoggedDataDates[IndexOfClosestLoggerEndObservation]
-  DepthEndDifference    <- DIppedEndDepth - LoggedEndDepth
+  DepthEndDifference    <- DippedEndDepth - LoggedEndDepth
   TimeEndDifference     <- as.numeric(abs(difftime(DippedEndDate,LoggedEndDateTime,units = "mins")))
 } else { #Case of no end dip data
   DippedEndDate      <- NA
@@ -203,7 +215,7 @@ DippedQC <- lapply(seq_along(DippedEndData$`APP No.`), function(Index) {
 }
   
   #Get the start dips
-    DippedStartDepth <- as.numeric(DippedStartData$`Dipped water level 2019 (m)`[as.numeric(DippedStartData$`APP No.`)== APPNo])
+    DippedStartDepth <- as.numeric(DippedStartData$`Dipped water level 2020 (m)`[as.numeric(DippedStartData$`APP No.`)== APPNo])
     if(!is.na(DippedStartDepth)){
     DippedStartDate  <- DippedStartData$DateTimes[as.numeric(DippedStartData$`APP No.`)== APPNo]
     if(length(LoggedDataDates) > 0){
@@ -232,22 +244,22 @@ DippedQC <- lapply(seq_along(DippedEndData$`APP No.`), function(Index) {
                                      'Start Dip Date-Time' =  DippedStartDate, 'Start Dip Depth(m)' = DippedStartDepth,
                                      'Start Dip Loggers Nearest Date-Time' = LoggedStartDateTime, 'Start Dip Logger Depth (m)' = LoggedStartDepth,
                                      'Start Dip Logger Time Difference (minutes)'= TimeStartDifference, 'Start Dip Logger Depth Difference (m)' = DepthStartDifference,
-                                     'End Dip Date-Time' =  DippedEndDate, 'End Dip Depth (m)' = DIppedEndDepth,
+                                     'End Dip Date-Time' =  DippedEndDate, 'End Dip Depth (m)' = DippedEndDepth,
                                      'End Dip Loggers Nearest Date-Time' = LoggedEndDateTime, 'End Dip Logger Depth (m)' = LoggedEndDepth,
                                      'End Dip Logger Time Difference (minutes)'= TimeEndDifference, 'End Dip Depth Difference (m)' = DepthEndDifference,
                                      "Change in dip difference (m)" = ChangeInDipOffset,check.names=FALSE)
   return(Output)
   })
 DipToAutoComparisonTable <- do.call(rbind,DippedQC)
-write.table(DipToAutoComparisonTable,"H:\\WL Projects\\WL20023_CCC APP\\Data 2020\\Monitoring Spreadsheet\\DippedQC.csv",quote=FALSE,row.names = FALSE,sep=",")
+write.table(DipToAutoComparisonTable,"H:\\WL Projects\\WL20023_CCC APP\\Data_Winter_2020\\Master Spreadsheet\\DippedQC.csv",quote=FALSE,row.names = FALSE,sep=",")
 ```
 
 Need to check whether an offset was introduced because of the downloading
 Get the first date of the latest download, check the logged depth for that time and the time immediately before it
 Identify any loggers with an offset of more than 10 cm.
 ```{r}
-AllDataDirectory <- "H:\\WL Projects\\WL20023_CCC APP\\Data 2020\\AllData"
-LatestDataDirectory <- "H:\\WL Projects\\WL20023_CCC APP\\Data 2020\\BaroAndOffsetCorrected"
+AllDataDirectory <- "H:\\WL Projects\\WL20023_CCC APP\\AllData"
+LatestDataDirectory <- "D:\\Projects\\Aqualinc\\projects\\APP\\Data\\Data Harvest 202009\\BaroAndOffsetCorrected"
 
 #Get all the filenames from the latest data download
 LatestDataFiles <- list.files(LatestDataDirectory, full.names = TRUE)
@@ -282,6 +294,6 @@ OffsetDetection <- lapply(seq_along(LatestDataFiles), function(CurrentFileIndex)
 })
 
 StepChangeOnDownloadQCTable <- do.call(rbind,OffsetDetection)
-write.table(StepChangeOnDownloadQCTable,"H:\\WL Projects\\WL20023_CCC APP\\Data 2020\\Monitoring Spreadsheet\\StepChangeOnDownloadQC.csv",quote=FALSE,row.names = FALSE,sep=",")
+write.table(StepChangeOnDownloadQCTable,"H:\\WL Projects\\WL20023_CCC APP\\Data_Winter_2020\\Master Spreadsheet\\StepChangeOnDownloadQC.csv",quote=FALSE,row.names = FALSE,sep=",")
 ```
 

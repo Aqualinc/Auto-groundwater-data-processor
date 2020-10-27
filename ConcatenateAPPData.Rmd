@@ -14,34 +14,34 @@ Its helpfull to stitch the data together after each download.
 ********** There is an issue with the am/pm formatting. This needs to be manually checked each time.
 This could be turned into a function which accepted Old directory, and new directory, and save directory, and magic could then happen.
 
+#After updating, need to go through and delete all the shorter files of the duplicated APP sites, these are the ones that have been updated.
+
 ```{r}
 if (!require(zoo)) install.packages("zoo"); library(zoo)
 if (!require(lubridate)) install.packages("lubridate"); library(lubridate)
 
-PreviousDataDirectory <- "H:\\WL Projects\\WL20023_CCC APP\\Data 2020\\AllDataV0"
-LatestDataDirectory <- "D:\\Projects\\Aqualinc\\projects\\APP\\Data\\Data Harvest 5\\Data Harvest 5"
+PreviousDataDirectory <- "H:\\WL Projects\\WL20023_CCC APP\\AllData"
+LatestDataDirectory <- "D:\\Projects\\Aqualinc\\projects\\APP\\Data\\Data Harvest 202009B\\BaroAndOffsetCorrected"
 #LatestDataDirectory <- "H:\\WL Projects\\WL20023_CCC APP\\Data 2020\\BaroAndOffsetCorrected"
 
 
-SaveDataDirectory <- "H:\\WL Projects\\WL20023_CCC APP\\Data 2020\\AllData"
+SaveDataDirectory <- "H:\\WL Projects\\WL20023_CCC APP\\AllData"
 
 #Prepare a list of all the APP numbers
 
 #Get a file list from the download data directories
-DownloadFileNames <- c(list.files(path=c(PreviousDataDirectory,LatestDataDirectory),pattern="^APP[0-9]*_[0-9]*-[0-9]*.csv",recursive =TRUE,full.names = TRUE),
-                       list.files(path=c(PreviousDataDirectory,LatestDataDirectory),pattern="^[0-9]*_.*Compensated.csv",recursive =TRUE,full.names = TRUE))
+DownloadFileNames <- list.files(path=c(PreviousDataDirectory,LatestDataDirectory),pattern="^APP[0-9]{4}_[0-9]{8}-[0-9]{8}\\.csv",full.names = TRUE)
 
-                       
-#Parse the file names to give just the APP numbers. Regex explanation. I'm testing for two possible matches divided by the or (|) symbol. The replacement assumes there is only ever one match so it makes no difference if both matches are delivered. Does that make any sense? 
-APPNumbers <- as.numeric(sub(pattern="^APP([0-9]*)_.*csv|^([0-9]*)_.*csv","\\1\\2",x=basename(DownloadFileNames)))
+#Parse the file names to give just the APP numbers.
+APPNumbers <- as.numeric(sub(pattern="^APP([0-9]*)_.*csv","\\1",x=basename(DownloadFileNames)))
 
-#Get just the unique APP numbers
-APPNumbersUnique <- unique(APPNumbers)
+#Get just the unique APP numbers which have duplicates, these are the ones that need updating
+APPNumbersToUpdate <- APPNumbers[duplicated(APPNumbers)]
 
 
 #Concatenate the download files for each site writing a new file for each one as we go
 
-for (APPNumber in APPNumbersUnique[12:length(APPNumbersUnique)]) { #APPNumber <- 3
+for (APPNumber in APPNumbersToUpdate[67]) { #APPNumber <- 5
   #Get the filenames associated with that APP number, but don't use the "initial_QA" files as in at least one case (APP 5), the initial_QA and the first proper download have the same time, but different values in the data.
   
   #browser()
@@ -52,7 +52,7 @@ for (APPNumber in APPNumbersUnique[12:length(APPNumbersUnique)]) { #APPNumber <-
   GWFiles <- DownloadFileNames[FileIndices]
 
   #load these files without headers, stick them together, and then stick them in the complete file, removing any duplicate date-time entries.
-  #There are two types of files, Aqualinc formatted and T&T formatted. Aqualinc has a single header line. T&T has 12 header lines.
+  #There are two types of files, Aqualinc formatted (which has a filename that starts with "APP") and T&T formatted. Aqualinc has a single header line. T&T has 12 header lines.
   #Additionally, T&T don't invert their levels, but Aqualinc do.
   InputDataLists <- lapply(GWFiles, function(FileOfInterest) {  #FileOfInterest <- GWFiles[1]
     if(substring(basename(FileOfInterest),1,3) == "APP") {
@@ -69,7 +69,7 @@ for (APPNumber in APPNumbersUnique[12:length(APPNumbersUnique)]) { #APPNumber <-
   #browser()
   InputDataCombined <- do.call("rbind", InputDataLists)
   
-  #It seems the locale is different from machine to machine. I have locale on my laptop set to "English_New zealand.1252" which has the am/pm format as am/pm or AM/PM, but NOT a.m./p.m.. So completely different to what was working at Aqualinc! I haven't check ed the Aqualinc locale yet.
+  #It seems the locale is different from machine to machine. I have locale on my laptop set to "English_New zealand.1252" which has the am/pm format as am/pm or AM/PM, but NOT a.m./p.m.. So completely different to what was working at Aqualinc! I haven't checked the Aqualinc locale yet.
   
   #I need to get the date and time in order, so turn it into a zoo time series object using the date and time columns to build the index
   #There is this annoying thing where am and pm are not recognsed but a.m. and p.m. are. Apparently this is a "locale" thing.
@@ -86,7 +86,7 @@ for (APPNumber in APPNumbersUnique[12:length(APPNumbersUnique)]) { #APPNumber <-
   
   #Even more annoyingly, the time is not in a consistent format between files, sometimes it has the am/pm sometimes it has a 24 hour time.
   #So I need to convert both types and stick them together.
-  #But note that the 24 hour format still converts the am/pm format (and gets it wrong), but the am/pm format returns an NA for the 24 hour format as it can't find the am/pm characters. So I do both conversions, and then swap out the NA values from the am/pm attempt with the 24 hour versions. This assumes everything that is not in am/pm format is in 25 hour format.
+  #But note that the 24 hour format still converts the am/pm format (and gets it wrong), but the am/pm format returns an NA for the 24 hour format as it can't find the am/pm characters. So I do both conversions, and then swap out the NA values from the am/pm attempt with the 24 hour versions. This assumes everything that is not in am/pm format is in 24 hour format.
 
 DateTimeA <- as.POSIXct(paste(InputDataCombined$Date,InputDataCombined$Time),
                           format="%d/%m/%Y %I:%M:%S %p",origin="1970-01-01",tz="Etc/GMT-12")
@@ -107,7 +107,9 @@ InputDataCombined$DateTime <- DateTimeA
   #Make the Time column format consistent for all records/rows
   InputDataCombinedNoDuplicates$Time <- format(InputDataCombinedNoDuplicates$DateTime,"%H:%M:%S")
   
-
+  #Remove any lines with NA DateTimes
+  InputDataCombinedNoDuplicates <- InputDataCombinedNoDuplicates[!is.na(InputDataCombinedNoDuplicates$DateTime),]
+  
   #So now I'm ready to make a nice time series object - I don't think I need this any more
   #InputDataZoo <- zoo(InputDataCombinedNoDuplicates[,c("LEVEL","ms","TEMPERATURE")],order.by=InputDataCombinedNoDuplicates$DateTime)
   #InputDataZoo <- zoo(InputDataCombinedNoDuplicates,order.by=InputDataCombinedNoDuplicates$DateTime)
