@@ -4,23 +4,21 @@ output: html_notebook
 ---
 
 
-Use the first data harvest as an example
+Load additional functions and set directory locations
 ```{r}
-#Load my functions and any libraries that I may need
-#source("\\\\aqualinc-sbs\\data\\ARL Projects\\WL Projects\\WL18036_EQC Earthquake Commission\\R\\Auto-groundwater-data-processor\\GWProcessingFunctions.R")
-source("D:\\Projects\\Aqualinc\\projects\\APP\\Auto-groundwater-data-processor\\GWProcessingFunctions.R")
+
+source("\\\\aqualinc-sbs\\data\\ARL Projects\\WL Projects\\WL18036_EQC Earthquake Commission\\R\\Auto-groundwater-data-processor\\GWProcessingFunctions.R")
 
 #Set some directories and filenames
-#DataDirectory <- "G:\\ARL Projects\\WL Projects\\WL18036_EQC Earthquake Commission\\Data\\HighResolutionData\\FromT_T_January2019\\DH1 - DH4\\DH1-DH4 Raw"
-#DataDirectory <- "H:\\WL Projects\\WL20023_CCC APP\\Data_Winter_2020"
-DataDirectory <- "D:\\Projects\\Aqualinc\\projects\\APP\\Data\\Data Harvest 202009"
+DataDirectory <- "G:\\ARL Projects\\WL Projects\\WL18036_EQC Earthquake Commission\\Data\\HighResolutionData\\FromT_T_January2019\\DH1 - DH4\\DH1-DH4 Raw"
+OutputDataDirectory <- "G:\\ARL Projects\\WL Projects\\WL18036_EQC Earthquake Commission\\R\\Auto-groundwater-data-processor\\OutputData"
+AutoProcessingDirectory <- "G:\\ARL Projects\\WL Projects\\WL18036_EQC Earthquake Commission\\R\\Auto-groundwater-data-processor"
 
-#OutputDataDirectory <- "G:\\ARL Projects\\WL Projects\\WL18036_EQC Earthquake Commission\\R\\Auto-groundwater-data-processor\\OutputData"
-#OutputDataDirectory <- "H:\\WL Projects\\WL20023_CCC APP\\Data_Winter_2020\\BaroAndOffsetCorrected"
-OutputDataDirectory <- "D:\\Projects\\Aqualinc\\projects\\APP\\Data\\Data Harvest 202009\\BaroAndOffsetCorrected"
-
-#AutoProcessingDirectory <- "G:\\ARL Projects\\WL Projects\\WL18036_EQC Earthquake Commission\\R\\Auto-groundwater-data-processor"
-AutoProcessingDirectory <- "D:\\Projects\\Aqualinc\\projects\\APP\\Auto-groundwater-data-processor"
+#For testing on Tims Laptop
+#source("D:\\Projects\\Aqualinc\\projects\\APP\\Auto-groundwater-data-processor\\GWProcessingFunctions.R")
+#DataDirectory <- "D:\\Projects\\Aqualinc\\projects\\APP\\Data\\Data Harvest 202106"
+#OutputDataDirectory <- "D:\\Projects\\Aqualinc\\projects\\APP\\Data\\Data Harvest 202106\\BaroAndOffsetCorrected"
+#AutoProcessingDirectory <- "D:\\Projects\\Aqualinc\\projects\\APP\\Auto-groundwater-data-processor"
 
 APPMetadataFile <- file.path(AutoProcessingDirectory,"AppMetadata.csv")
 ```
@@ -89,66 +87,84 @@ Compare the compensated data to the dipped data. The dipped data is a bit custom
 There are two dips, one taken during the download, complete with data and time of dip.
 The second is the dip from the 2019 download. This doesn't appear to have date and time details. The best that can be done is to assume that it relates to the start of the record for the latest download.
 ```{r}
-LoggerDataDirectory <- "H:\\WL Projects\\WL20023_CCC APP\\AllData"
-#DippedDataAtEndFile <- "H:\\WL Projects\\WL20023_CCC APP\\Data 2020\\Monitoring Spreadsheet\\20200221.Piezometer Downloads_TIM K.xlsx" #Aqualinc servers via Tims laptop
-DippedDataAtEndFile <- "D:\\Projects\\Aqualinc\\projects\\APP\\Auto-groundwater-data-processor\\Location-ordered July2020 APP Download Fieldsheet.xlsx" #Copy on Tim's laptop
+LoggerDataDirectory <- "G:\\WL Projects\\WL20023_CCC APP\\AllData"
+LatestCorrectedDataDirectory <- "G:\\WL Projects\\WL20023_CCC APP\\For ECan April-May 2021\\April-May Download Run\\April-May Data 2021\\BaroAndOffsetCorrected"
+DippedDataAtEndFile <- "G:\\WL Projects\\WL20023_CCC APP\\For ECan April-May 2021\\Location-ordered April2021 APP Download Fieldsheet.xlsx"
+DippedDataAtStartFile <- "G:\\WL Projects\\WL20023_CCC APP\\Data_Winter_2020\\Master Spreadsheet\\Location-ordered July2020 APP Download Fieldsheet.xlsx"   
+OutputFileName <- "G:\\WL Projects\\WL20023_CCC APP\\For ECan April-May 2021\\DippedQC.csv"
 
-#DippedDataAtStartFile <- "H:\\WL Projects\\WL20023_CCC APP\\T&T Stocktake 2019\\ECan EQC stocktake\\Aqualinc\\Aug2019.Piezometer Stocktake_Rev1.1.xlsx"   #Aqualinc servers via Tims laptop
-DippedDataAtStartFile <- "D:\\Projects\\Aqualinc\\projects\\APP\\Auto-groundwater-data-processor\\20200221.Piezometer Downloads_TIM K.xlsx"     #On Tims Laptop
+#Test directories on Tim's laptop
+#LoggerDataDirectory <- "D:\\Projects\\Aqualinc\\projects\\APP\\Data\\AllData"
+#LatestCorrectedDataDirectory <- "D:\\Projects\\Aqualinc\\projects\\APP\\Data\\Data Harvest 202106\\BaroAndOffsetCorrected"
+#DippedDataAtEndFile <- "D:\\Projects\\Aqualinc\\projects\\APP\\Auto-groundwater-data-processor\\Location-ordered April2021 APP Download Fieldsheet.xlsx"
+#DippedDataAtStartFile <- "D:\\Projects\\Aqualinc\\projects\\APP\\Auto-groundwater-data-processor\\Location-ordered July2020 APP Download Fieldsheet.xlsx"
+#OutputFileName <- "D:\\Projects\\Aqualinc\\projects\\APP\\Auto-groundwater-data-processor\\DippedQC.csv"
+
 
 LoggerDataFiles <- list.files(LoggerDataDirectory, full.names = TRUE)
 
-#Get the dipped data taken at the previous download (i.e. at the begining of the data for thie current download)
+#Get the dipped data taken at the previous download (i.e. at the beginning of the data for the current download)
 
 {
-DippedStartData <- read_xlsx(DippedDataAtStartFile, sheet = "TIM K", range= cell_cols("B:L"))
+  DippedStartData <- read_xlsx(DippedDataAtStartFile, sheet = "Field use", range= cell_cols("A:L"),col_types = c("numeric",rep("skip",8),"date","text","numeric"))
   
-  #Remove any lines not related to an APP number (assumed blank lines)
-  DippedStartData <- DippedStartData[!is.na(DippedStartData$`APP No.`),]
+  #Remove any lines without a Date, assumed that they were not downloaded
+  DippedStartData <- DippedStartData[!is.na(DippedStartData$Date),]
   
-#Explicitly force the ingested timezone to be NZST, overriding the read_xls default of UTC
-DippedStartData$Date <- force_tz(DippedStartData$Date, "Etc/GMT-12")
-
-#When importing, the times that were recognised as times were converted to an excel time object (i.e. a decimal number representing a fraction of a day). All the others were left as text. Because all the values in a column within R need to be one "type" they are all conveted to "character" on import. This makes a mess!
-
-#Of the time strings that still need converting, the format varies, so they need to be standardised.
-Times <- DippedStartData$Time
-
-#convert all the "am" and "pm" variants to  "AM" and "PM"
-Times <- sub(" a.m"," AM",Times)
-Times <- sub(" p.m"," PM",Times)
-Times <- sub("a.m."," AM",Times)
-Times <- sub("p.m."," PM",Times)
-Times <- sub("a.m"," AM",Times)
-Times <- sub("p.m"," PM",Times)
-Times <- sub("A.M.","AM",Times)
-Times <- sub("P.M.","PM",Times)
-
-#Now that all they can be converted into a time object, but only do the entries that don't look numeric.
-#To allign with the excel numeric format, convert from seconds to fractions of a day, and make the origin the POSIXct origin (1970-01-01)
-Times[which(is.na(as.numeric(Times)))] <-
-as.character(as.numeric(parse_date_time(paste("1970-01-01", Times[which(is.na(as.numeric(Times)))]),"%Y-%m-%d %I:%M:%S %p"))/(60*60*24))
-
-#Can now convert them
-#Times5 <- as.POSIXct(3600 * as.numeric(Times), origin = "1970-01-01", tz="Etc/GMT-12")
-
-Times5 <- as.numeric(Times)
-
-#And add them to the dates
-DippedStartData$DateTimes <- DippedStartData$Date + Times5 * 3600 * 24
+  #the times are read in as characters, even though they should be a decimal number representing a fraction of a day).
+  #To create an R Date-time, need to, add the times to the dates. The times needed to be converted from fractions of a day to seconds
+  DippedStartData$DateTimes <- DippedStartData$Date + as.numeric(DippedStartData$'Time') * 3600 * 24
+  
+  #Explicitly force the time zone to NZST
+  DippedStartData$DateTimes <- force_tz(DippedStartData$DateTimes, "Etc/GMT-12")
 }
+  
+#   #Remove any lines not related to an APP number (assumed blank lines)
+#   DippedStartData <- DippedStartData[!is.na(DippedStartData$`APP No.`),]
+#   
+# #Explicitly force the ingested timezone to be NZST, overriding the read_xls default of UTC
+# DippedStartData$Date <- force_tz(DippedStartData$Date, "Etc/GMT-12")
+# 
+# #When importing, the times that were recognised as times were converted to an excel time object (i.e. a decimal number representing a fraction of a day). All the others were left as text. Because all the values in a column within R need to be one "type" they are all conveted to "character" on import. This makes a mess!
+# 
+# #Of the time strings that still need converting, the format varies, so they need to be standardised.
+# Times <- DippedStartData$Time
+# 
+# #convert all the "am" and "pm" variants to  "AM" and "PM"
+# Times <- sub(" a.m"," AM",Times)
+# Times <- sub(" p.m"," PM",Times)
+# Times <- sub("a.m."," AM",Times)
+# Times <- sub("p.m."," PM",Times)
+# Times <- sub("a.m"," AM",Times)
+# Times <- sub("p.m"," PM",Times)
+# Times <- sub("A.M.","AM",Times)
+# Times <- sub("P.M.","PM",Times)
+# 
+# #Now that all they can be converted into a time object, but only do the entries that don't look numeric.
+# #To allign with the excel numeric format, convert from seconds to fractions of a day, and make the origin the POSIXct origin (1970-01-01)
+# Times[which(is.na(as.numeric(Times)))] <-
+# as.character(as.numeric(parse_date_time(paste("1970-01-01", Times[which(is.na(as.numeric(Times)))]),"%Y-%m-%d %I:%M:%S %p"))/(60*60*24))
+# 
+# #Can now convert them
+# #Times5 <- as.POSIXct(3600 * as.numeric(Times), origin = "1970-01-01", tz="Etc/GMT-12")
+# 
+# Times5 <- as.numeric(Times)
+# 
+# #And add them to the dates
+# DippedStartData$DateTimes <- DippedStartData$Date + Times5 * 3600 * 24
+# }
 
 
 #Get the dipped data taken during the download (i.e. the latest)
 {
-  DippedEndData <- read_xlsx(DippedDataAtEndFile, sheet = "Field use", range= cell_cols("A:L"),col_types = c("numeric",rep("skip",8),"date","text","numeric"))
+  DippedEndData <- read_xlsx(DippedDataAtEndFile, sheet = "Print out", range= cell_cols("A:F"),col_types = c("numeric",rep("skip",2),"date","text","numeric"))
   
-  #Remove any lines without a Date, assumed that they were not downloaded
-  DippedEndData <- DippedEndData[!is.na(DippedEndData$Date),]
+  #Remove any lines without a time, assumed that they were not downloaded
+  DippedEndData <- DippedEndData[!is.na(DippedEndData$'Time(Autumn 2021'),]
   
   #the times are read in as characters, even though they should be a decimal number representing a fraction of a day).
   #To create an R Date-time, need to, add the times to the dates. The times needed to be converted from fractions of a day to seconds
-  DippedEndData$DateTimes <- DippedEndData$Date + as.numeric(DippedEndData$'Time') * 3600 * 24
+  DippedEndData$DateTimes <- DippedEndData$'Date (Autumn 2021)' + as.numeric(DippedEndData$'Time(Autumn 2021') * 3600 * 24
   
   #Explicitly force the time zone to NZST
   DippedEndData$DateTimes <- force_tz(DippedEndData$DateTimes, "Etc/GMT-12")
@@ -156,9 +172,9 @@ DippedStartData$DateTimes <- DippedStartData$Date + Times5 * 3600 * 24
 
 
 #Check that all downloaded sites have a reading in the Field note spreadsheet.
-AllDownloadedSites <- list.files(path = c("D:\\Projects\\Aqualinc\\projects\\APP\\Data\\Data Harvest 202009\\BaroAndOffsetCorrected"), pattern = 'APP\\d+_\\d{8}.*\\.csv$', recursive = TRUE, full.names = FALSE)
+AllDownloadedSites <- list.files(path = LatestCorrectedDataDirectory, pattern = 'APP\\d+_\\d{8}.*\\.csv$', recursive = TRUE, full.names = FALSE)
 AllDownloadedSiteAPPNumbers <- as.numeric(sub(pattern="^APP([0-9]*)_.*csv","\\1",x=AllDownloadedSites))
-FieldNoteSites <- DippedEndData$`APP No.`[which(!is.na(DippedEndData$Time))]
+FieldNoteSites <- DippedEndData$`APP No.`[which(!is.na(DippedEndData$'Time(Autumn 2021'))]
 print(paste("APP sites missing in field note spreadsheet:",AllDownloadedSiteAPPNumbers[which(!AllDownloadedSiteAPPNumbers %in% FieldNoteSites)]))
 
 CompleteDataFileSites <- as.numeric(sub(pattern="^APP([0-9]*)_.*csv","\\1",x=basename(LoggerDataFiles)))
@@ -191,7 +207,7 @@ print(paste("APP sites missing from the complete data holdings:",AllDownloadedSi
   LoggedDataDates    <- as.POSIXct(paste(LoggedDataRaw$Date,LoggedDataRaw$Time),format="%d/%m/%Y %H:%M:%S",tz="Etc/GMT-12")
 
   #Get the end dips
-  DippedEndDepth <- DippedEndData$`Dipped Water Level (m) Winter 2020`[DippedEndDataIndex]
+  DippedEndDepth <- DippedEndData$`Dipped Water Level (Autumn 2021)`[DippedEndDataIndex]
 
   if(!is.na(DippedEndDepth)){
   DippedEndDate  <- DippedEndData$DateTimes[DippedEndDataIndex]
@@ -215,7 +231,7 @@ print(paste("APP sites missing from the complete data holdings:",AllDownloadedSi
 }
   
   #Get the start dips
-    DippedStartDepth <- as.numeric(DippedStartData$`Dipped water level 2020 (m)`[as.numeric(DippedStartData$`APP No.`)== APPNo])
+    DippedStartDepth <- as.numeric(DippedStartData$`Dipped Water Level (m) Winter 2020`[as.numeric(DippedStartData$`APP No.`)== APPNo])
     if(!is.na(DippedStartDepth)){
     DippedStartDate  <- DippedStartData$DateTimes[as.numeric(DippedStartData$`APP No.`)== APPNo]
     if(length(LoggedDataDates) > 0){
@@ -251,17 +267,23 @@ print(paste("APP sites missing from the complete data holdings:",AllDownloadedSi
   return(Output)
   })
 DipToAutoComparisonTable <- do.call(rbind,DippedQC)
-write.table(DipToAutoComparisonTable,"H:\\WL Projects\\WL20023_CCC APP\\Data_Winter_2020\\Master Spreadsheet\\DippedQC.csv",quote=FALSE,row.names = FALSE,sep=",")
+write.table(DipToAutoComparisonTable,OutputFileName,quote=FALSE,row.names = FALSE,sep=",")
 ```
 
 Need to check whether an offset was introduced because of the downloading
 Get the first date of the latest download, check the logged depth for that time and the time immediately before it
 Identify any loggers with an offset of more than 10 cm.
 ```{r}
-AllDataDirectory <- "H:\\WL Projects\\WL20023_CCC APP\\AllData"
-LatestDataDirectory <- "D:\\Projects\\Aqualinc\\projects\\APP\\Data\\Data Harvest 202009\\BaroAndOffsetCorrected"
+AllDataDirectory <- "G:\\WL Projects\\WL20023_CCC APP\\AllData"
+LatestDataDirectory <- "G:\\WL Projects\\WL20023_CCC APP\\For ECan April-May 2021\\April-May Download Run\\April-May Data 2021\\BaroAndOffsetCorrected"
+OutputStepChangeFile <- "G:\\WL Projects\\WL20023_CCC APP\\For ECan April-May 2021\\StepChangeOnDownloadQC.csv"
 
-#Get all the filenames from the latest data download
+#Test directories on Tim's laptop
+#AllDataDirectory <- "D:\\Projects\\Aqualinc\\projects\\APP\\Data\\AllData" 
+#LatestDataDirectory <- "D:\\Projects\\Aqualinc\\projects\\APP\\Data\\Data Harvest 202009\\BaroAndOffsetCorrected"
+#OutputStepChangeFile <- "D:\\Projects\\Aqualinc\\projects\\APP\\Data\\StepChangeOnDownloadQC.csv"
+
+#Get all the file names from the latest data download
 LatestDataFiles <- list.files(LatestDataDirectory, full.names = TRUE)
 
 #Work through each file in turn
@@ -273,8 +295,8 @@ OffsetDetection <- lapply(seq_along(LatestDataFiles), function(CurrentFileIndex)
   #Get the date and time of the first line
   DateTimeText <- paste(strsplit(FirstLine,",")[[1]][1:2],collapse=" ")
   
-  #Now go through the rediculous process of getting the a.m./p.m. correct
-    DateTimeText <- sub("a.m.","am",DateTimeText)
+  #Now go through the ridiculous process of getting the a.m./p.m. correct
+  DateTimeText <- sub("a.m.","am",DateTimeText)
   DateTimeText <- sub("p.m.","pm",DateTimeText)
   
   DateTime <- as.POSIXct(DateTimeText, format = "%d/%m/%Y %I:%M:%S %p",tz = "Etc/GMT-12")
@@ -294,6 +316,6 @@ OffsetDetection <- lapply(seq_along(LatestDataFiles), function(CurrentFileIndex)
 })
 
 StepChangeOnDownloadQCTable <- do.call(rbind,OffsetDetection)
-write.table(StepChangeOnDownloadQCTable,"H:\\WL Projects\\WL20023_CCC APP\\Data_Winter_2020\\Master Spreadsheet\\StepChangeOnDownloadQC.csv",quote=FALSE,row.names = FALSE,sep=",")
+write.table(StepChangeOnDownloadQCTable,OutputStepChangeFile,quote=FALSE,row.names = FALSE,sep=",")
 ```
 

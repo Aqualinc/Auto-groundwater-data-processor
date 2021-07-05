@@ -80,9 +80,11 @@ ReadXMLData <- function(XMLFile) {
 #' ReadXMLData() 
 
 ReadcsvData <- function(csvFile) {
-
+  
   #Test for and load any libraries that are needed
   if (!require(zoo)) install.packages('zoo'); library(zoo)
+  if (!require(stringr)) install.packages('stringr'); library(stringr)
+  if (!require(gsubfn)) install.packages('gsubfn'); library(gsubfn)
   
   #Define the multipliers to convert from kPa or psi air pressure to metres of head
   ConversionFactors <- c(kPa=0.10199773339984, psi = 0.70324961490205) #from https://www.convertunits.com
@@ -106,10 +108,40 @@ ReadcsvData <- function(csvFile) {
   APPNumber <- as.numeric(sub(".*APP\\s*([1-9][0-9]{0,2}).*","\\1", ProjectID, ignore.case = TRUE))
   #Extract the Zone number from the Project ID. This is assumed to be the first single digit number after the case insensitive word "zone"
   ZoneNumber <- as.numeric(sub(".*Zone\\s*([0-9]).*","\\1", ProjectID, ignore.case = TRUE))
-
+  
   LEVELUnits <- sub(".*: ","",HeaderData[which(HeaderData == "LEVEL")+ 1])
   #Check the units of the LEVEL channel and convert to metres head if necesary
   if( LEVELUnits != "m") data$LEVEL <- data$LEVEL * ConversionFactors[LEVELUnits]
+  
+  #Annoyingly the time format varies from download to download. Sometimes it has am/pm so this needs to be sorted out
+  #Check for am/pm in the time string, and adjust accordingly
+  
+  #convert all the "am" and "pm" variants to  "AM" and "PM"
+  data$Time <- sub(" am"," AM",data$Time)
+  data$Time <- sub(" pm"," PM",data$Time)
+  data$Time <- sub(" a.m"," AM",data$Time)
+  data$Time <- sub(" p.m"," PM",data$Time)
+  data$Time <- sub("a.m."," AM",data$Time)
+  data$Time <- sub("p.m."," PM",data$Time)
+  data$Time <- sub("a.m"," AM",data$Time)
+  data$Time <- sub("p.m"," PM",data$Time)
+  data$Time <- sub("A.M.","AM",data$Time)
+  data$Time <- sub("P.M.","PM",data$Time)
+  
+  #if there is a PM at the end of the string, then add 12 to the first two numbers, but only if they are not 12, in which case leave them.
+  PMIndices = which(str_sub(data$Time,-2,-1) == "PM")
+  
+  if(length(PMIndices > 0)){
+    data$Time[PMIndices] <- gsubfn("([0-9]{2})(.*)", ~ paste(as.numeric(x)%%12 + 12, y, sep=""), data$Time[PMIndices])
+  }
+  #If there is an AM at the end of the string, convert the 12's to 00's because 12 am is midnight.
+  AMIndices = which(str_sub(data$Time,-2,-1) == "AM")
+  
+  if(length(AMIndices > 0)){
+    data$Time[AMIndices] <- gsubfn("([0-9]{2})(.*)", ~ paste(sprintf("%02d",as.numeric(x)%%12), y, sep=""), data$Time[AMIndices])
+  }
+  #Then remove the AM/PM characters
+  data$Time <- sub(" [AP]M$","",data$Time)
   
   #Turn the dates and time into a POSIXct object. Annoyingly the date format is different compared to the .xle files.
   DateTime <- as.POSIXct(paste(data$Date,data$Time),format = "%d/%m/%Y %H:%M:%S", tz = "Etc/GMT-12")
@@ -193,6 +225,7 @@ BaroDataMerging <- function(DataDirectory) {
     BarosOfInterest <- BaroData[ListIndices]
     LEVELsOfInterest <- lapply(BarosOfInterest, function(x) x[['Data']]$'LEVEL')
     #Merge the data, then find the row averages if there are multiple series. This covers the possibility of overlapping times
+
     MergedData <- do.call(merge, LEVELsOfInterest)
     if(!is.null(ncol(MergedData))) MergedData <- zoo(rowMeans(MergedData,na.rm=TRUE), index(MergedData))
     return(MergedData)
