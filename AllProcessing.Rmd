@@ -10,8 +10,8 @@ Load additional functions and set directory locations
 source("\\\\aqualinc-sbs\\data\\ARL Projects\\WL Projects\\WL18036_EQC Earthquake Commission\\R\\Auto-groundwater-data-processor\\GWProcessingFunctions.R")
 
 #Set some directories and filenames
-DataDirectory <- "G:\\ARL Projects\\WL Projects\\WL18036_EQC Earthquake Commission\\Data\\HighResolutionData\\FromT_T_January2019\\DH1 - DH4\\DH1-DH4 Raw"
-OutputDataDirectory <- "G:\\ARL Projects\\WL Projects\\WL18036_EQC Earthquake Commission\\R\\Auto-groundwater-data-processor\\OutputData"
+DataDirectory <- "G:\\ARL Projects\\WL Projects\\WL20023_CCC APP\\For ECan April-May 2021\\April-May Download Run\\April-May Data 2021"
+OutputDataDirectory <- "G:\\ARL Projects\\WL Projects\\WL20023_CCC APP\\For ECan April-May 2021\\April-May Download Run\\April-May Data 2021\\BaroAndOffsetCorrected"
 AutoProcessingDirectory <- "G:\\ARL Projects\\WL Projects\\WL18036_EQC Earthquake Commission\\R\\Auto-groundwater-data-processor"
 
 #For testing on Tims Laptop
