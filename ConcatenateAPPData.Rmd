@@ -20,8 +20,8 @@ This could be turned into a function which accepted Old directory, and new direc
 if (!require(zoo)) install.packages("zoo"); library(zoo)
 if (!require(lubridate)) install.packages("lubridate"); library(lubridate)
 
-AllDataDirectory <- "G:\\WL Projects\\WL20023_CCC APP\\AllData"
-LatestDataDirectory <- "G:\\WL Projects\\WL20023_CCC APP\\For ECan April-May 2021\\April-May Download Run\\April-May Data 2021\\BaroAndOffsetCorrected"
+AllDataDirectory <- "G:\\ARL Projects\\WL Projects\\WL20023_CCC APP\\AllData"
+LatestDataDirectory <- "G:\\ARL Projects\\WL Projects\\WL20023_CCC APP\\For ECan April-May 2021\\April-May Download Run\\April-May Data 2021\\BaroAndOffsetCorrected"
 
 #For testing on Tims Laptop
 #LatestDataDirectory <- "D:\\Projects\\Aqualinc\\projects\\APP\\Data\\Data Harvest 202106\\BaroAndOffsetCorrected"
