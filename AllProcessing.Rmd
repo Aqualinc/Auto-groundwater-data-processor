@@ -96,8 +96,8 @@ OutputFileName <- "G:\\ARL Projects\\WL Projects\\WL20023_CCC APP\\For ECan Apri
 #Test directories on Tim's laptop
 #LoggerDataDirectory <- "D:\\Projects\\Aqualinc\\projects\\APP\\Data\\AllData"
 #LatestCorrectedDataDirectory <- "D:\\Projects\\Aqualinc\\projects\\APP\\Data\\Data Harvest 202106\\BaroAndOffsetCorrected"
-#DippedDataAtEndFile <- "D:\\Projects\\Aqualinc\\projects\\APP\\Auto-groundwater-data-processor\\Location-ordered April2021 APP Download Fieldsheet.xlsx"
-#DippedDataAtStartFile <- "D:\\Projects\\Aqualinc\\projects\\APP\\Auto-groundwater-data-processor\\Location-ordered July2020 APP Download Fieldsheet.xlsx"
+#DippedDataAtEndFile <- "D:\\Projects\\Aqualinc\\projects\\APP\\Auto-groundwater-data-processor\\Location-ordered April2021 APP #Download Fieldsheet.xlsx"
+#DippedDataAtStartFile <- "D:\\Projects\\Aqualinc\\projects\\APP\\Auto-groundwater-data-processor\\Location-ordered July2020 APP #Download Fieldsheet.xlsx"
 #OutputFileName <- "D:\\Projects\\Aqualinc\\projects\\APP\\Auto-groundwater-data-processor\\DippedQC.csv"
 
 
@@ -118,7 +118,7 @@ LoggerDataFiles <- list.files(LoggerDataDirectory, full.names = TRUE)
   #Explicitly force the time zone to NZST
   DippedStartData$DateTimes <- force_tz(DippedStartData$DateTimes, "Etc/GMT-12")
 }
-  
+
 #   #Remove any lines not related to an APP number (assumed blank lines)
 #   DippedStartData <- DippedStartData[!is.na(DippedStartData$`APP No.`),]
 #   
@@ -174,6 +174,8 @@ LoggerDataFiles <- list.files(LoggerDataDirectory, full.names = TRUE)
 #Check that all downloaded sites have a reading in the Field note spreadsheet.
 AllDownloadedSites <- list.files(path = LatestCorrectedDataDirectory, pattern = 'APP\\d+_\\d{8}.*\\.csv$', recursive = TRUE, full.names = FALSE)
 AllDownloadedSiteAPPNumbers <- as.numeric(sub(pattern="^APP([0-9]*)_.*csv","\\1",x=AllDownloadedSites))
+AllDownloadedSiteAPPNumbers <- AllDownloadedSiteAPPNumbers[!duplicated(AllDownloadedSiteAPPNumbers)]
+
 FieldNoteSites <- DippedEndData$`APP No.`[which(!is.na(DippedEndData$'Time(Autumn 2021'))]
 print(paste("APP sites missing in field note spreadsheet:",AllDownloadedSiteAPPNumbers[which(!AllDownloadedSiteAPPNumbers %in% FieldNoteSites)]))
 
@@ -181,15 +183,23 @@ CompleteDataFileSites <- as.numeric(sub(pattern="^APP([0-9]*)_.*csv","\\1",x=bas
 print(paste("APP sites missing from the complete data holdings:",AllDownloadedSiteAPPNumbers[which(!AllDownloadedSiteAPPNumbers %in% CompleteDataFileSites)]))
 
 #Work through each APP number in turn, get the dipped data and the time of measurement and get the associated logged data, then compare the two
-   
- DippedQC <- lapply(seq_along(AllDownloadedSiteAPPNumbers), function(Index) {   #for testing Index <- 45
+
+DippedQC <- lapply(seq_along(AllDownloadedSiteAPPNumbers), function(Index) {   #for testing Index <- 24
+  if (Index == 24) browser()
   APPNo       <- AllDownloadedSiteAPPNumbers[Index]
   print(APPNo)
-  DippedEndDataIndex <- which(DippedEndData$`APP No.`== APPNo)
+  DippedEndDataIndex <- which(DippedEndData$`APP No.`== APPNo)[1]
   
   #Get the related logger data
-    LoggerDataFilesIndices <- which(startsWith(basename(LoggerDataFiles), sprintf("APP%04.0f", APPNo)))
+  LoggerDataFilesIndices <- which(startsWith(basename(LoggerDataFiles), sprintf("APP%04.0f", APPNo)))
   
+  #Set the default end dip data to NA
+  DippedEndDepth     <- NA
+  DippedEndDate      <- NA
+  LoggedEndDateTime  <- NA
+  LoggedEndDepth     <- NA
+  TimeEndDifference  <- NA
+  DepthEndDifference <- NA
   #If there is only one file then open it
   if(length(LoggerDataFilesIndices)==1) {
     LoggedDataRaw <- read.table(LoggerDataFiles[LoggerDataFilesIndices],header=TRUE,sep=",",stringsAsFactors = FALSE)
@@ -205,68 +215,63 @@ print(paste("APP sites missing from the complete data holdings:",AllDownloadedSi
   LoggedDataRaw$Time <- sub("a.m.","AM",LoggedDataRaw$Time)
   LoggedDataRaw$Time <- sub("p.m.","PM",LoggedDataRaw$Time)
   LoggedDataDates    <- as.POSIXct(paste(LoggedDataRaw$Date,LoggedDataRaw$Time),format="%d/%m/%Y %H:%M:%S",tz="Etc/GMT-12")
-
+  
   #Get the end dips
   DippedEndDepth <- DippedEndData$`Dipped Water Level (Autumn 2021)`[DippedEndDataIndex]
-
-  if(!is.na(DippedEndDepth)){
-  DippedEndDate  <- DippedEndData$DateTimes[DippedEndDataIndex]
-  if(length(LoggedDataDates) > 0){
-  IndexOfClosestLoggerEndObservation <- which(abs(LoggedDataDates-DippedEndDate) == min(abs(LoggedDataDates - DippedEndDate),na.rm = TRUE))[1]
-  LoggedEndDepth        <- LoggedDataRaw$LEVEL[IndexOfClosestLoggerEndObservation] * -1 #multiply by negative 1 to convert to depth, rather than height above measuring point
-  } else {
-    IndexOfClosestLoggerEndObservation <- NA
-    LoggedEndDepth <- NA
-  }
-    
-  LoggedEndDateTime     <- LoggedDataDates[IndexOfClosestLoggerEndObservation]
-  DepthEndDifference    <- DippedEndDepth - LoggedEndDepth
-  TimeEndDifference     <- as.numeric(abs(difftime(DippedEndDate,LoggedEndDateTime,units = "mins")))
-} else { #Case of no end dip data
-  DippedEndDate      <- NA
-  LoggedEndDateTime  <- NA
-  LoggedEndDepth     <- NA
-  TimeEndDifference  <- NA
-  DepthEndDifference <- NA
-}
   
-  #Get the start dips
-    DippedStartDepth <- as.numeric(DippedStartData$`Dipped Water Level (m) Winter 2020`[as.numeric(DippedStartData$`APP No.`)== APPNo])
-    if (length(DippedStartDepth) > 0){
-      if(!is.na(DippedStartDepth)){
-      DippedStartDate  <- DippedStartData$DateTimes[as.numeric(DippedStartData$`APP No.`)== APPNo]
-      if(length(LoggedDataDates) > 0){
-        IndexOfClosestLoggerStartObservation <- which(abs(LoggedDataDates-DippedStartDate) == min(abs(LoggedDataDates - DippedStartDate),na.rm=TRUE))[1]
-        LoggedStartDepth        <- LoggedDataRaw$LEVEL[IndexOfClosestLoggerStartObservation] * -1 #multiply by negative 1 to convert to depth, rather than height above measuring point
-        } else {
-        IndexOfClosestLoggerStartObservation <- NA
-        LoggedStartDepth <- NA
-      }
-        
-    LoggedStartDateTime     <- LoggedDataDates[IndexOfClosestLoggerStartObservation]
-    DepthStartDifference    <- DippedStartDepth - LoggedStartDepth
-    TimeStartDifference     <- as.numeric(abs(difftime(DippedStartDate,LoggedStartDateTime,units = "mins")))
-    }} else{
+  if(!is.na(DippedEndDepth)){
+    DippedEndDate  <- DippedEndData$DateTimes[DippedEndDataIndex]
+    if(length(LoggedDataDates) > 0){
+      IndexOfClosestLoggerEndObservation <- which(abs(LoggedDataDates-DippedEndDate) == min(abs(LoggedDataDates - DippedEndDate),na.rm = TRUE))[1]
+      LoggedEndDepth        <- LoggedDataRaw$LEVEL[IndexOfClosestLoggerEndObservation] * -1 #multiply by negative 1 to convert to depth, rather than height above measuring point
+    } else {
+      IndexOfClosestLoggerEndObservation <- NA
+      LoggedEndDepth <- NA
+    }
+    
+    LoggedEndDateTime     <- LoggedDataDates[IndexOfClosestLoggerEndObservation]
+    DepthEndDifference    <- DippedEndDepth - LoggedEndDepth
+    TimeEndDifference     <- as.numeric(abs(difftime(DippedEndDate,LoggedEndDateTime,units = "mins")))
+  }
+  #Set the default start dip data to NA 
+  
   DippedStartDate      <- NA
   LoggedStartDateTime  <- NA
   LoggedStartDepth     <- NA
   TimeStartDifference  <- NA
   DepthStartDifference <- NA
+  #Get the start dips
+  DippedStartDepth <- as.numeric(DippedStartData$`Dipped Water Level (m) Winter 2020`[as.numeric(DippedStartData$`APP No.`)== APPNo])
+  if (length(DippedStartDepth) == 0) DippedStartDepth     <- NA
+  if(!is.na(DippedStartDepth)){
+    DippedStartDate  <- DippedStartData$DateTimes[as.numeric(DippedStartData$`APP No.`)== APPNo]
+    if(length(LoggedDataDates) > 0){
+      IndexOfClosestLoggerStartObservation <- which(abs(LoggedDataDates-DippedStartDate) == min(abs(LoggedDataDates - DippedStartDate),na.rm=TRUE))[1]
+      LoggedStartDepth        <- LoggedDataRaw$LEVEL[IndexOfClosestLoggerStartObservation] * -1 #multiply by negative 1 to convert to depth, rather than height above measuring point
+    } else {
+      IndexOfClosestLoggerStartObservation <- NA
+      LoggedStartDepth <- NA
     }
     
-
-    
+    LoggedStartDateTime     <- LoggedDataDates[IndexOfClosestLoggerStartObservation]
+    DepthStartDifference    <- DippedStartDepth - LoggedStartDepth
+    TimeStartDifference     <- as.numeric(abs(difftime(DippedStartDate,LoggedStartDateTime,units = "mins")))
+  }
+  
+  
+  
   ChangeInDipOffset     <- DepthEndDifference - DepthStartDifference
-    Output             <- data.frame(APPNo = APPNo,
-                                     'Start Dip Date-Time' =  DippedStartDate, 'Start Dip Depth(m)' = DippedStartDepth,
-                                     'Start Dip Loggers Nearest Date-Time' = LoggedStartDateTime, 'Start Dip Logger Depth (m)' = LoggedStartDepth,
-                                     'Start Dip Logger Time Difference (minutes)'= TimeStartDifference, 'Start Dip Logger Depth Difference (m)' = DepthStartDifference,
-                                     'End Dip Date-Time' =  DippedEndDate, 'End Dip Depth (m)' = DippedEndDepth,
-                                     'End Dip Loggers Nearest Date-Time' = LoggedEndDateTime, 'End Dip Logger Depth (m)' = LoggedEndDepth,
-                                     'End Dip Logger Time Difference (minutes)'= TimeEndDifference, 'End Dip Depth Difference (m)' = DepthEndDifference,
-                                     "Change in dip difference (m)" = ChangeInDipOffset,check.names=FALSE)
+
+  Output             <- data.frame(APPNo = APPNo,
+                                   'Start Dip Date-Time' =  DippedStartDate, 'Start Dip Depth(m)' = DippedStartDepth,
+                                   'Start Dip Loggers Nearest Date-Time' = LoggedStartDateTime, 'Start Dip Logger Depth (m)' = LoggedStartDepth,
+                                   'Start Dip Logger Time Difference (minutes)'= TimeStartDifference, 'Start Dip Logger Depth Difference (m)' = DepthStartDifference,
+                                   'End Dip Date-Time' =  DippedEndDate, 'End Dip Depth (m)' = DippedEndDepth,
+                                   'End Dip Loggers Nearest Date-Time' = LoggedEndDateTime, 'End Dip Logger Depth (m)' = LoggedEndDepth,
+                                   'End Dip Logger Time Difference (minutes)'= TimeEndDifference, 'End Dip Depth Difference (m)' = DepthEndDifference,
+                                   "Change in dip difference (m)" = ChangeInDipOffset,check.names=FALSE)
   return(Output)
-  })
+})
 DipToAutoComparisonTable <- do.call(rbind,DippedQC)
 write.table(DipToAutoComparisonTable,OutputFileName,quote=FALSE,row.names = FALSE,sep=",")
 ```
