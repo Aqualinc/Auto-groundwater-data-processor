@@ -27,7 +27,7 @@ LatestDataDirectory <- "G:\\WL Projects\\WL20023_CCC APP\\For ECan April-May 202
 #LatestDataDirectory <- "D:\\Projects\\Aqualinc\\projects\\APP\\Data\\Data Harvest 202106\\BaroAndOffsetCorrected"
 
 SaveDataDirectory <- AllDataDirectory
-#SaveDataDirectory <- "G:\\WL Projects\\WL20023_CCC APP\\AllData"
+  #SaveDataDirectory <- "G:\\WL Projects\\WL20023_CCC APP\\AllData"
 
 #Prepare a list of all the APP numbers
 
