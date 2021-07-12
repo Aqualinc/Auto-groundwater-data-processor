@@ -87,11 +87,11 @@ Compare the compensated data to the dipped data. The dipped data is a bit custom
 There are two dips, one taken during the download, complete with data and time of dip.
 The second is the dip from the 2019 download. This doesn't appear to have date and time details. The best that can be done is to assume that it relates to the start of the record for the latest download.
 ```{r}
-LoggerDataDirectory <- "G:\\WL Projects\\WL20023_CCC APP\\AllData"
-LatestCorrectedDataDirectory <- "G:\\WL Projects\\WL20023_CCC APP\\For ECan April-May 2021\\April-May Download Run\\April-May Data 2021\\BaroAndOffsetCorrected"
-DippedDataAtEndFile <- "G:\\WL Projects\\WL20023_CCC APP\\For ECan April-May 2021\\Location-ordered April2021 APP Download Fieldsheet.xlsx"
-DippedDataAtStartFile <- "G:\\WL Projects\\WL20023_CCC APP\\Data_Winter_2020\\Master Spreadsheet\\Location-ordered July2020 APP Download Fieldsheet.xlsx"   
-OutputFileName <- "G:\\WL Projects\\WL20023_CCC APP\\For ECan April-May 2021\\DippedQC.csv"
+LoggerDataDirectory <- "G:\\ARL Projects\\WL Projects\\WL20023_CCC APP\\AllData"
+LatestCorrectedDataDirectory <- "G:\\ARL Projects\\WL Projects\\WL20023_CCC APP\\For ECan April-May 2021\\April-May Download Run\\April-May Data 2021\\BaroAndOffsetCorrected"
+DippedDataAtEndFile <- "G:\\ARL Projects\\WL Projects\\WL20023_CCC APP\\For ECan April-May 2021\\Location-ordered April2021 APP Download Fieldsheet.xlsx"
+DippedDataAtStartFile <- "G:\\ARL Projects\\WL Projects\\WL20023_CCC APP\\Data_Winter_2020\\Master Spreadsheet\\Location-ordered July2020 APP Download Fieldsheet.xlsx"   
+OutputFileName <- "G:\\ARL Projects\\WL Projects\\WL20023_CCC APP\\For ECan April-May 2021\\DippedQC.csv"
 
 #Test directories on Tim's laptop
 #LoggerDataDirectory <- "D:\\Projects\\Aqualinc\\projects\\APP\\Data\\AllData"
@@ -108,8 +108,8 @@ LoggerDataFiles <- list.files(LoggerDataDirectory, full.names = TRUE)
 {
   DippedStartData <- read_xlsx(DippedDataAtStartFile, sheet = "Field use", range= cell_cols("A:L"),col_types = c("numeric",rep("skip",8),"date","text","numeric"))
   
-  #Remove any lines without a Date, assumed that they were not downloaded
-  DippedStartData <- DippedStartData[!is.na(DippedStartData$Date),]
+  #Remove any lines without a Time, assumed that they were not downloaded
+  DippedStartData <- DippedStartData[!is.na(DippedStartData$Time),]
   
   #the times are read in as characters, even though they should be a decimal number representing a fraction of a day).
   #To create an R Date-time, need to, add the times to the dates. The times needed to be converted from fractions of a day to seconds
@@ -182,7 +182,7 @@ print(paste("APP sites missing from the complete data holdings:",AllDownloadedSi
 
 #Work through each APP number in turn, get the dipped data and the time of measurement and get the associated logged data, then compare the two
    
- DippedQC <- lapply(seq_along(AllDownloadedSiteAPPNumbers), function(Index) {   #for testing Index <- 82
+ DippedQC <- lapply(seq_along(AllDownloadedSiteAPPNumbers), function(Index) {   #for testing Index <- 45
   APPNo       <- AllDownloadedSiteAPPNumbers[Index]
   print(APPNo)
   DippedEndDataIndex <- which(DippedEndData$`APP No.`== APPNo)
@@ -232,20 +232,21 @@ print(paste("APP sites missing from the complete data holdings:",AllDownloadedSi
   
   #Get the start dips
     DippedStartDepth <- as.numeric(DippedStartData$`Dipped Water Level (m) Winter 2020`[as.numeric(DippedStartData$`APP No.`)== APPNo])
-    if(!is.na(DippedStartDepth)){
-    DippedStartDate  <- DippedStartData$DateTimes[as.numeric(DippedStartData$`APP No.`)== APPNo]
-    if(length(LoggedDataDates) > 0){
-      IndexOfClosestLoggerStartObservation <- which(abs(LoggedDataDates-DippedStartDate) == min(abs(LoggedDataDates - DippedStartDate),na.rm=TRUE))[1]
-      LoggedStartDepth        <- LoggedDataRaw$LEVEL[IndexOfClosestLoggerStartObservation] * -1 #multiply by negative 1 to convert to depth, rather than height above measuring point
-      } else {
-      IndexOfClosestLoggerStartObservation <- NA
-      LoggedStartDepth <- NA
-    }
-      
-  LoggedStartDateTime     <- LoggedDataDates[IndexOfClosestLoggerStartObservation]
-  DepthStartDifference    <- DippedStartDepth - LoggedStartDepth
-  TimeStartDifference     <- as.numeric(abs(difftime(DippedStartDate,LoggedStartDateTime,units = "mins")))
-    } else{
+    if (length(DippedStartDepth) > 0){
+      if(!is.na(DippedStartDepth)){
+      DippedStartDate  <- DippedStartData$DateTimes[as.numeric(DippedStartData$`APP No.`)== APPNo]
+      if(length(LoggedDataDates) > 0){
+        IndexOfClosestLoggerStartObservation <- which(abs(LoggedDataDates-DippedStartDate) == min(abs(LoggedDataDates - DippedStartDate),na.rm=TRUE))[1]
+        LoggedStartDepth        <- LoggedDataRaw$LEVEL[IndexOfClosestLoggerStartObservation] * -1 #multiply by negative 1 to convert to depth, rather than height above measuring point
+        } else {
+        IndexOfClosestLoggerStartObservation <- NA
+        LoggedStartDepth <- NA
+      }
+        
+    LoggedStartDateTime     <- LoggedDataDates[IndexOfClosestLoggerStartObservation]
+    DepthStartDifference    <- DippedStartDepth - LoggedStartDepth
+    TimeStartDifference     <- as.numeric(abs(difftime(DippedStartDate,LoggedStartDateTime,units = "mins")))
+    }} else{
   DippedStartDate      <- NA
   LoggedStartDateTime  <- NA
   LoggedStartDepth     <- NA
@@ -274,9 +275,9 @@ Need to check whether an offset was introduced because of the downloading
 Get the first date of the latest download, check the logged depth for that time and the time immediately before it
 Identify any loggers with an offset of more than 10 cm.
 ```{r}
-AllDataDirectory <- "G:\\WL Projects\\WL20023_CCC APP\\AllData"
-LatestDataDirectory <- "G:\\WL Projects\\WL20023_CCC APP\\For ECan April-May 2021\\April-May Download Run\\April-May Data 2021\\BaroAndOffsetCorrected"
-OutputStepChangeFile <- "G:\\WL Projects\\WL20023_CCC APP\\For ECan April-May 2021\\StepChangeOnDownloadQC.csv"
+AllDataDirectory <- "G:\\ARL Projects\\WL Projects\\WL20023_CCC APP\\AllData"
+LatestDataDirectory <- "G:\\ARL Projects\\WL Projects\\WL20023_CCC APP\\For ECan April-May 2021\\April-May Download Run\\April-May Data 2021\\BaroAndOffsetCorrected"
+OutputStepChangeFile <- "G:\\ARL Projects\\WL Projects\\WL20023_CCC APP\\For ECan April-May 2021\\StepChangeOnDownloadQC.csv"
 
 #Test directories on Tim's laptop
 #AllDataDirectory <- "D:\\Projects\\Aqualinc\\projects\\APP\\Data\\AllData" 
@@ -290,6 +291,7 @@ LatestDataFiles <- list.files(LatestDataDirectory, full.names = TRUE)
 OffsetDetection <- lapply(seq_along(LatestDataFiles), function(CurrentFileIndex) {
   CurrentFileName <- LatestDataFiles[CurrentFileIndex]
   APPNo <- as.numeric(sub("^APP([0-9]*)_.*","\\1",basename(CurrentFileName)))
+  print(APPNo)
   #Read the first data line from the file and get the first date time
   FirstLine <- readLines(CurrentFileName,2,)[2]
   #Get the date and time of the first line
